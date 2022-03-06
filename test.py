@@ -25,7 +25,7 @@ today = str(datetime.date.today() + datetime.timedelta(days=1)) # test用（明�
 
 sakuhin_code = []
 title = []
-# image_url = []
+image_url = []
 today_time_schedule = []
 loop_index = 0
 
@@ -56,13 +56,12 @@ for eiga in eiga_info:
         # 作品タイトルを取得
         title.append(eiga.find('h2', class_='title-xlarge margin-top20').find('a').get_text())
         # 作品の画像を取得
-        # image_url.append(eiga.find('div', class_='movie-image').find('img', attrs={'alt':title[loop_index]})['src'])
+        image_url.append(eiga.find('div', class_='movie-image').find('img')['src'])
         loop_index += 1
 
-# for i in range(len(title)):
+for i in range(len(title)):
 #     print(f'title : {title[i]}')
-#     # print(f'image : {image_url[i]}')
-#     # print(f'image : {type(image_url[i])}')
+    print(f'image : {image_url[i]}')
 #     print(f'schedule : {today_time_schedule[i]}')
 #     print(f'reservation : {toho_reservation_url}{sakuhin_code[i]}')
 #     print('------------------------------')
