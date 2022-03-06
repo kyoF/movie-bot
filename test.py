@@ -14,7 +14,7 @@ content_container_info = soup.find_all('div', class_='content-container')
 eiga_info = content_container_info[1].find_all('section')
 
 # today = str(datetime.date.today())
-today = '2022-03-07' # テスト用
+today = str(datetime.date.today() + datetime.timedelta(days=1)) # test用（明日の日付で取得）
 
 sakuhin_code = []
 title = []
