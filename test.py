@@ -4,6 +4,7 @@ import datetime
 import slackweb
 import json
 
+# 取得先のページ
 sinjuku_toho_theater = 'https://eiga.com/theater/13/130201/3263/'
 toho_reservation_url = 'https://hlo.tohotheater.jp/net/movie/TNPI3060J01.do?sakuhin_cd='
 
@@ -55,13 +56,21 @@ for eiga in eiga_info:
 
         # 作品タイトルを取得
         title.append(eiga.find('h2', class_='title-xlarge margin-top20').find('a').get_text())
+        
         # 作品の画像を取得
-        image_url.append(eiga.find('div', class_='movie-image').find('img')['src'])
+        image_info = str(eiga.find('div', class_='movie-image').find('noscript'))
+        first_target_str = 'src="'
+        second_target_str = '" width='
+        first_idx = image_info.find(first_target_str)
+        second_idx = image_info.find(second_target_str)
+        tmp_image_url = image_info[first_idx+len(first_target_str):second_idx]
+        image_url.append(tmp_image_url)
+
         loop_index += 1
 
-for i in range(len(title)):
+# for i in range(len(title)):
 #     print(f'title : {title[i]}')
-    print(f'image : {image_url[i]}')
+#     print(f'image : {image_url[i]}')
 #     print(f'schedule : {today_time_schedule[i]}')
 #     print(f'reservation : {toho_reservation_url}{sakuhin_code[i]}')
 #     print('------------------------------')
