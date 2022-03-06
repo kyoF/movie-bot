@@ -1,4 +1,3 @@
-from asyncore import loop
 import requests
 from bs4 import BeautifulSoup
 import datetime
