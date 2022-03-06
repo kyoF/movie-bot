@@ -29,16 +29,15 @@ for eiga in eiga_info:
         today_schedule_info_list.pop(0)
         for time in today_schedule_info_list:
             today_time_schedule[loop_index] = { 'schedule_time':time.get_text(), 'reservation_url':'' }
-            if '~' in time.get_text() or ':' in time.get_text():
-                toho_seat_url = time['href']
-                today_time_schedule[loop_index]['reservation_url'] = toho_seat_url
-                if len(sakuhin_code) != loop_index+1:
-                    first_target_str = 'sakuhin_cd='
-                    second_target_str = '&screen_cd='
-                    first_idx = toho_seat_url.find(first_target_str)
-                    second_idx = toho_seat_url.find(second_target_str)
-                    tmp_sakuhin_code = toho_seat_url[first_idx+len(first_target_str):second_idx]
-                    sakuhin_code.append(tmp_sakuhin_code)
+            toho_seat_url = time['href']
+            today_time_schedule[loop_index]['reservation_url'] = toho_seat_url
+            if len(sakuhin_code) != loop_index+1:
+                first_target_str = 'sakuhin_cd='
+                second_target_str = '&screen_cd='
+                first_idx = toho_seat_url.find(first_target_str)
+                second_idx = toho_seat_url.find(second_target_str)
+                tmp_sakuhin_code = toho_seat_url[first_idx+len(first_target_str):second_idx]
+                sakuhin_code.append(tmp_sakuhin_code)
 
         title.append(eiga.find('h2', class_='title-xlarge margin-top20').find('a').get_text())
         # image_url.append(eiga.find('div', class_='movie-image').find('img', attrs={'alt':title[loop_index]})['src'])
