@@ -1,9 +1,16 @@
 import requests
 from bs4 import BeautifulSoup
 import datetime
+import slackweb
+import json
 
 sinjuku_toho_theater = 'https://eiga.com/theater/13/130201/3263/'
 toho_reservation_url = 'https://hlo.tohotheater.jp/net/movie/TNPI3060J01.do?sakuhin_cd='
+
+json_f = open('slack_info.json', 'r')
+json_data = json.load(json_f)
+slack = slackweb.Slack(url=json_data["incoming_webhook_url"])
+json_f.close()
 
 response = requests.get(sinjuku_toho_theater)
 soup = BeautifulSoup(response.content, 'html.parser')
@@ -58,3 +65,5 @@ for i in range(len(title)):
     print(f'schedule : {today_time_schedule[i]}')
     print(f'reservation : {toho_reservation_url}{sakuhin_code[i]}')
     print('------------------------------')
+
+slack.notify(text='pythonからslackへの通知テストver1.1')

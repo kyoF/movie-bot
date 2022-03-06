@@ -1,4 +1,8 @@
 import slackweb
+import json
 
-slack = slackweb.Slack(url="https://hooks.slack.com/services/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")
+json_open = open('slack_info.json', 'r')
+json_load = json.load(json_open)
+
+slack = slackweb.Slack(url=json_load["incoming_webhook_url"])
 slack.notify(text="pythonからslackへ通知テスト")
