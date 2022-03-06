@@ -7,6 +7,7 @@ import json
 sinjuku_toho_theater = 'https://eiga.com/theater/13/130201/3263/'
 toho_reservation_url = 'https://hlo.tohotheater.jp/net/movie/TNPI3060J01.do?sakuhin_cd='
 
+# slackへの通知設定
 json_f = open('slack_info.json', 'r')
 json_data = json.load(json_f)
 slack = slackweb.Slack(url=json_data["incoming_webhook_url"])
@@ -58,12 +59,58 @@ for eiga in eiga_info:
         # image_url.append(eiga.find('div', class_='movie-image').find('img', attrs={'alt':title[loop_index]})['src'])
         loop_index += 1
 
-for i in range(len(title)):
-    print(f'title : {title[i]}')
-    # print(f'image : {image_url[i]}')
-    # print(f'image : {type(image_url[i])}')
-    print(f'schedule : {today_time_schedule[i]}')
-    print(f'reservation : {toho_reservation_url}{sakuhin_code[i]}')
-    print('------------------------------')
+# for i in range(len(title)):
+#     print(f'title : {title[i]}')
+#     # print(f'image : {image_url[i]}')
+#     # print(f'image : {type(image_url[i])}')
+#     print(f'schedule : {today_time_schedule[i]}')
+#     print(f'reservation : {toho_reservation_url}{sakuhin_code[i]}')
+#     print('------------------------------')
 
-slack.notify(text='pythonからslackへの通知テストver1.1')
+attachments = [
+    {
+        "blocks": [
+            {
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": "*Alternative hotel options*"
+                }
+            },
+            {
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": "<https://example.com|Bates Motel> :star::star:"
+                },
+                "accessory": {
+                    "type": "button",
+                    "text": {
+                        "type": "plain_text",
+                        "text": "View",
+                        "emoji": True
+                    },
+                    "value": "view_alternate_1"
+                }
+            },
+            {
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": "<https://example.com|The Great Northern Hotel> :star::star::star::star:"
+                },
+                "accessory": {
+                    "type": "button",
+                    "text": {
+                        "type": "plain_text",
+                        "text": "View",
+                        "emoji": True
+                    },
+                    "value": "view_alternate_2"
+                }
+            }
+        ]
+    }
+]
+
+slack.notify(text='python to slack', attachments=attachments)
