@@ -15,12 +15,11 @@ eiga_info = content_container_info[1].find_all('section')
 # today = str(datetime.date.today())
 today = '2022-03-07' # テスト用
 
+sakuhin_code = []
 title = []
 # image_url = []
 today_time_schedule = []
-detail_url = []
 loop_index = 0
-sakuhin_code = []
 
 for eiga in eiga_info:
     tmp_schedule = eiga.find('div', class_='movie-schedule').find('td', attrs={'data-date':today.replace('-', '')})
