@@ -81,7 +81,7 @@ attachments = [
                 "type": "section",
                 "text": {
                     "type": "mrkdwn",
-                    "text": "<https://example.com|Bates Motel> :star::star:"
+                    "text": f"<{sinjuku_toho_theater}|Bates Motel> :star::star:"
                 },
                 "accessory": {
                     "type": "button",
@@ -98,6 +98,49 @@ attachments = [
                 "text": {
                     "type": "mrkdwn",
                     "text": "<https://example.com|The Great Northern Hotel> :star::star::star::star:"
+                },
+                "accessory": {
+                    "type": "button",
+                    "text": {
+                        "type": "plain_text",
+                        "text": "View",
+                        "emoji": True
+                    },
+                    "value": "view_alternate_2"
+                }
+            }
+        ]
+    },
+    {
+        "blocks": [
+            {
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": "*Alternative hotel options*"
+                }
+            },
+            {
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": "<https://example.com|Bates Motel> :star::star:"
+                },
+                "accessory": {
+                    "type": "button",
+                    "text": {
+                        "type": "plain_text",
+                        "text": "View",
+                        "emoji": True
+                    },
+                    "value": "view_alternate_1"
+                }
+            },
+            {
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": "<https://example.com|The Great Northern Hotel> :star::star::star::star::star:"
                 },
                 "accessory": {
                     "type": "button",
