@@ -11,7 +11,7 @@ toho_reservation_url = 'https://hlo.tohotheater.jp/net/movie/TNPI3060J01.do?saku
 # slackへの通知設定
 json_f = open('slack_info.json', 'r')
 json_data = json.load(json_f)
-slack = slackweb.Slack(url=json_data["incoming_webhook_url"])
+slack = slackweb.Slack(url=json_data['incoming_webhook_url'])
 json_f.close()
 
 response = requests.get(sinjuku_toho_theater)
@@ -29,6 +29,8 @@ title = []
 image_url = []
 today_time_schedule = []
 loop_index = 0
+
+slack_notify_info = []
 
 for eiga in eiga_info:
     # 今日放映する作品を取得
@@ -68,100 +70,58 @@ for eiga in eiga_info:
 
         loop_index += 1
 
-# for i in range(len(title)):
+for i in range(len(title)):
 #     print(f'title : {title[i]}')
 #     print(f'image : {image_url[i]}')
 #     print(f'schedule : {today_time_schedule[i]}')
 #     print(f'reservation : {toho_reservation_url}{sakuhin_code[i]}')
 #     print('------------------------------')
+    slack_notify_info.append(
+        {
+            'blocks': [
+                {
+                    'type': 'section',
+                    'text': {
+                        'type': 'mrkdwn',
+                        'text': f'*{title[i]}*'
+                    },
+                    'image_url': f'{image_url[i]}'
+                },
+                {
+                    'type': 'section',
+                    'text': {
+                        'type': 'mrkdwn',
+                        'text': f'<{sinjuku_toho_theater}|Bates Motel> :star::star:'
+                    },
+                    'accessory': {
+                        'type': 'button',
+                        'text': {
+                            'type': 'plain_text',
+                            'text': 'View',
+                            'emoji': True
+                        },
+                        'value': 'view_alternate_1'
+                    }
+                },
+                {
+                    'type': 'section',
+                    'text': {
+                        'type': 'mrkdwn',
+                        'text': '<https://example.com|The Great Northern Hotel> :star::star::star::star:'
+                    },
+                    'accessory': {
+                        'type': 'button',
+                        'text': {
+                            'type': 'plain_text',
+                            'text': 'View',
+                            'emoji': True
+                        },
+                        'value': 'view_alternate_2'
+                    }
+                }
+            ]
+        }
+    )
 
-attachments = [
-    {
-        "blocks": [
-            {
-                "type": "section",
-                "text": {
-                    "type": "mrkdwn",
-                    "text": "*Alternative hotel options*"
-                }
-            },
-            {
-                "type": "section",
-                "text": {
-                    "type": "mrkdwn",
-                    "text": f"<{sinjuku_toho_theater}|Bates Motel> :star::star:"
-                },
-                "accessory": {
-                    "type": "button",
-                    "text": {
-                        "type": "plain_text",
-                        "text": "View",
-                        "emoji": True
-                    },
-                    "value": "view_alternate_1"
-                }
-            },
-            {
-                "type": "section",
-                "text": {
-                    "type": "mrkdwn",
-                    "text": "<https://example.com|The Great Northern Hotel> :star::star::star::star:"
-                },
-                "accessory": {
-                    "type": "button",
-                    "text": {
-                        "type": "plain_text",
-                        "text": "View",
-                        "emoji": True
-                    },
-                    "value": "view_alternate_2"
-                }
-            }
-        ]
-    },
-    {
-        "blocks": [
-            {
-                "type": "section",
-                "text": {
-                    "type": "mrkdwn",
-                    "text": "*Alternative hotel options*"
-                }
-            },
-            {
-                "type": "section",
-                "text": {
-                    "type": "mrkdwn",
-                    "text": "<https://example.com|Bates Motel> :star::star:"
-                },
-                "accessory": {
-                    "type": "button",
-                    "text": {
-                        "type": "plain_text",
-                        "text": "View",
-                        "emoji": True
-                    },
-                    "value": "view_alternate_1"
-                }
-            },
-            {
-                "type": "section",
-                "text": {
-                    "type": "mrkdwn",
-                    "text": "<https://example.com|The Great Northern Hotel> :star::star::star::star::star:"
-                },
-                "accessory": {
-                    "type": "button",
-                    "text": {
-                        "type": "plain_text",
-                        "text": "View",
-                        "emoji": True
-                    },
-                    "value": "view_alternate_2"
-                }
-            }
-        ]
-    }
-]
-
-slack.notify(text='python to slack', attachments=attachments)
+# slack.notify(text='今日の映画情報', attachments=attachments)
+slack.notify(text='開発中・・・')
