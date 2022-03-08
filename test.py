@@ -71,11 +71,6 @@ for eiga in eiga_info:
         loop_index += 1
 
 for i in range(len(title)):
-#     print(f'title : {title[i]}')
-#     print(f'image : {image_url[i]}')
-#     print(f'schedule : {today_time_schedule[i]}')
-#     print(f'reservation : {toho_reservation_url}{sakuhin_code[i]}')
-#     print('------------------------------')
     slack_notify_info.append(
         {
             'blocks': [
@@ -83,45 +78,32 @@ for i in range(len(title)):
                     'type': 'section',
                     'text': {
                         'type': 'mrkdwn',
-                        'text': f'*{title[i]}*'
+                        'text': f'<{toho_reservation_url}{sakuhin_code[i]}|*{title[i]}*>'
                     },
                     'image_url': f'{image_url[i]}'
-                },
-                {
-                    'type': 'section',
-                    'text': {
-                        'type': 'mrkdwn',
-                        'text': f'<{sinjuku_toho_theater}|Bates Motel> :star::star:'
-                    },
-                    'accessory': {
-                        'type': 'button',
-                        'text': {
-                            'type': 'plain_text',
-                            'text': 'View',
-                            'emoji': True
-                        },
-                        'value': 'view_alternate_1'
-                    }
-                },
-                {
-                    'type': 'section',
-                    'text': {
-                        'type': 'mrkdwn',
-                        'text': '<https://example.com|The Great Northern Hotel> :star::star::star::star:'
-                    },
-                    'accessory': {
-                        'type': 'button',
-                        'text': {
-                            'type': 'plain_text',
-                            'text': 'View',
-                            'emoji': True
-                        },
-                        'value': 'view_alternate_2'
-                    }
                 }
             ]
         }
     )
+    for j in range(len(today_time_schedule)):
+        slack_notify_info['blocks'].append(
+            {
+                'type': 'section',
+                'text': {
+                    'type': 'mrkdwn',
+                    'text': f'<{today_time_schedule[i][j]["reservation_url"]}|{today_time_schedule[i][j]["schedule_time"]}>'
+                },
+                'accessory': {
+                    'type': 'button',
+                    'text': {
+                        'type': 'plain_text',
+                        'text': f'<{today_time_schedule[i][j]["reservation_url"]}|Reservation>',
+                        'emoji': True
+                    },
+                    'value': 'view_alternate_1'
+                }
+            }
+        )
 
 # slack.notify(text='今日の映画情報', attachments=attachments)
 slack.notify(text='開発中・・・')
