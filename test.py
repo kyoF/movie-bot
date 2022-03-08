@@ -1,3 +1,4 @@
+from ast import arguments
 import requests
 from bs4 import BeautifulSoup
 import datetime
@@ -97,10 +98,9 @@ for i in range(len(title)):
                     'type': 'button',
                     'text': {
                         'type': 'plain_text',
-                        'text': f'<{today_time_schedule[i][j]["reservation_url"]}|Reservation>',
-                        'emoji': True
+                        'text': 'Reservation'
                     },
-                    'value': 'view_alternate_1'
+                    'value': f'view_alternate_{j+1}'
                 }
             }
         )
