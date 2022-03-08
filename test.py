@@ -45,7 +45,7 @@ for eiga in eiga_info:
         for time in today_schedule_info_list:
             # 時間とそれに対応する席予約のURLを辞書型で取得
             toho_seat_url = time['href']
-            today_time_schedule[loop_index] = { 'schedule_time':time.get_text(), 'reservation_url':toho_seat_url }
+            today_time_schedule[loop_index].append({ 'schedule_time':time.get_text(), 'reservation_url':toho_seat_url })
             
             # 東宝のURLから作品コードを取得
             if len(sakuhin_code) != loop_index+1:
@@ -85,8 +85,8 @@ for i in range(len(title)):
             ]
         }
     )
-    for j in range(len(today_time_schedule)):
-        slack_notify_info['blocks'].append(
+    for j in range(len(today_time_schedule[i])):
+        slack_notify_info[i]['blocks'].append(
             {
                 'type': 'section',
                 'text': {
@@ -105,5 +105,5 @@ for i in range(len(title)):
             }
         )
 
-# slack.notify(text='今日の映画情報', attachments=attachments)
+# slack.notify(text='今日の映画情報', attachments=slack_notify_info)
 slack.notify(text='開発中・・・')
