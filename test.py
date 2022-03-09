@@ -81,7 +81,7 @@ for i in range(len(title)):
                         'type': 'mrkdwn',
                         'text': f'<{toho_reservation_url}{sakuhin_code[i]}|*{title[i]}*>'
                     },
-                    'image_url': f'{image_url[i]}'
+                    # 'image_url': f'{image_url[i]}'
                 }
             ]
         }
@@ -107,8 +107,8 @@ for i in range(len(title)):
     if i == 0:
         break
 
-# with open("testdata.py", "w") as f:
-#     print(slack_notify_info, file=f)
+with open("testdata.py", "w") as f:
+    print(slack_notify_info, file=f)
 
 # slack.notify(text='今日の映画情報', attachments=attachments)
 slack.notify(text='開発中・・・', attachments=slack_notify_info)
