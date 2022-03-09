@@ -31,7 +31,7 @@ image_url = []
 today_time_schedule = []
 loop_index = 0
 
-slack_notify_info = {'attachments':[]}
+slack_notify_info = []
 
 for eiga in eiga_info:
     # 今日放映する作品を取得
@@ -72,7 +72,7 @@ for eiga in eiga_info:
         loop_index += 1
 
 for i in range(len(title)):
-    slack_notify_info['attachments'].append(
+    slack_notify_info.append(
         {
             'blocks': [
                 {
@@ -87,7 +87,7 @@ for i in range(len(title)):
         }
     )
     for j in range(len(today_time_schedule[i])):
-        slack_notify_info['attachments'][i]['blocks'].append(
+        slack_notify_info[i]['blocks'].append(
             {
                 'type': 'section',
                 'text': {
@@ -104,6 +104,11 @@ for i in range(len(title)):
                 }
             }
         )
+    if i == 0:
+        break
 
-slack.notify(text='今日の映画情報', attachments=slack_notify_info)
-# slack.notify(text='開発中・・・')
+# with open("testdata.py", "w") as f:
+#     print(slack_notify_info, file=f)
+
+# slack.notify(text='今日の映画情報', attachments=attachments)
+slack.notify(text='開発中・・・', attachments=slack_notify_info)
