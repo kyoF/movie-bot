@@ -113,5 +113,6 @@ for i in range(len(title)):
             }
         )
 
+print(sakuhin_code)
 # slack.notify(text='今日の映画情報')
 slack.notify(text='開発中・・・', attachments=slack_notify_info)
