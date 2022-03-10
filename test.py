@@ -22,8 +22,10 @@ content_container_info = soup.find_all('div', class_='content-container')
 # 映画情報部分のみを取得
 eiga_info = content_container_info[1].find_all('section')
 
-# today = str(datetime.date.today())
-today = str(datetime.date.today() + datetime.timedelta(days=1)) # test用（明日の日付で取得）
+tomorrow = datetime.date.today() + datetime.timedelta(days=1)
+month = tomorrow.month
+day = tomorrow.day
+day_of_week = tomorrow.strftime('%a')
 
 sakuhin_code = []
 title = []
@@ -34,8 +36,8 @@ loop_index = 0
 slack_notify_info = []
 
 for eiga in eiga_info:
-    # 今日放映する作品を取得
-    tmp_schedule = eiga.find('div', class_='movie-schedule').find('td', attrs={'data-date':today.replace('-', '')})
+    # 明日放映する作品を取得
+    tmp_schedule = eiga.find('div', class_='movie-schedule').find('td', attrs={'data-date':str(tomorrow).replace('-', '')})
 
     if tmp_schedule:
         today_time_schedule.append([])
@@ -64,7 +66,6 @@ for eiga in eiga_info:
 
         # 作品タイトルを取得
         tmp = eiga.find('h2', class_='title-xlarge margin-top20')
-        # print(tmp)
         if '<a href' in tmp:
             title.append(tmp.find('a').get_text())
         else:
@@ -105,13 +106,16 @@ for i in range(len(title)):
         }
     )
     for j in range(len(today_time_schedule[i])):
+        if today_time_schedule[i][j]["reservation_url"] == '':
+            reserve_link = f'{today_time_schedule[i][j]["schedule_time"]}'
+        else:
+            reserve_link = f'<{today_time_schedule[i][j]["reservation_url"]}|{today_time_schedule[i][j]["schedule_time"]}>'
+        
         slack_notify_info[i]['blocks'][1]['fields'].append(
             {
                 "type": "mrkdwn",
-                "text": f'<{today_time_schedule[i][j]["reservation_url"]}|{today_time_schedule[i][j]["schedule_time"]}>'
+                "text": reserve_link
             }
         )
 
-print(sakuhin_code)
-# slack.notify(text='今日の映画情報')
-slack.notify(text='開発中・・・', attachments=slack_notify_info)
+slack.notify(text=f'明日 ( {str(month)}/{str(day)} {str(day_of_week)} ) の映画情報', attachments=slack_notify_info)
