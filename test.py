@@ -44,21 +44,32 @@ for eiga in eiga_info:
         # 初めの要素は曜日情報なので削除
         today_schedule_info_list.pop(0)
         for time in today_schedule_info_list:
-            # 時間とそれに対応する席予約のURLを辞書型で取得
-            toho_seat_url = time['href']
-            today_time_schedule[loop_index].append({ 'schedule_time':time.get_text(), 'reservation_url':toho_seat_url })
-            
-            # 東宝のURLから作品コードを取得
-            if len(sakuhin_code) != loop_index+1:
-                first_target_str = 'sakuhin_cd='
-                second_target_str = '&screen_cd='
-                first_idx = toho_seat_url.find(first_target_str)
-                second_idx = toho_seat_url.find(second_target_str)
-                tmp_sakuhin_code = toho_seat_url[first_idx+len(first_target_str):second_idx]
-                sakuhin_code.append(tmp_sakuhin_code)
+            if 'href' in time:
+                # 時間とそれに対応する席予約のURLを辞書型で取得
+                toho_seat_url = time['href']
+                today_time_schedule[loop_index].append({ 'schedule_time':time.get_text(), 'reservation_url':toho_seat_url })
+                
+                # 東宝のURLから作品コードを取得
+                if len(sakuhin_code) != loop_index+1:
+                    first_target_str = 'sakuhin_cd='
+                    second_target_str = '&screen_cd='
+                    first_idx = toho_seat_url.find(first_target_str)
+                    second_idx = toho_seat_url.find(second_target_str)
+                    tmp_sakuhin_code = toho_seat_url[first_idx+len(first_target_str):second_idx]
+                    sakuhin_code.append(tmp_sakuhin_code)
+            else:
+                today_time_schedule[loop_index].append({ 'schedule_time':time.get_text(), 'reservation_url':'' })
+                if len(sakuhin_code) != loop_index+1:
+                    sakuhin_code.append('')
 
         # 作品タイトルを取得
-        title.append(eiga.find('h2', class_='title-xlarge margin-top20').find('a').get_text())
+        tmp = eiga.find('h2', class_='title-xlarge margin-top20')
+        # print(tmp)
+        if '<a href' in tmp:
+            title.append(tmp.find('a').get_text())
+        else:
+            title.append(tmp.get_text())
+        # title.append(eiga.find('h2', class_='title-xlarge margin-top20').find('a').get_text())
         
         # 作品の画像を取得
         image_info = str(eiga.find('div', class_='movie-image').find('noscript'))
@@ -76,36 +87,29 @@ for i in range(len(title)):
         {
             'blocks': [
                 {
-                    'type': 'section',
-                    'text': {
-                        'type': 'mrkdwn',
-                        'text': f'<{toho_reservation_url}{sakuhin_code[i]}|*{title[i]}*>'
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": f'<{toho_reservation_url}{sakuhin_code[i]}|*{title[i]}*>'
                     },
+                    "accessory": {
+                        "type": "image",
+                        "image_url": image_url[i],
+                        "alt_text": title[i]
+                    }
                 },
                 {
-                    'type': 'image',
-                    'image_url': image_url[i],
-                    'alt_text':title[i]
+                    "type": "section",
+                    "fields": []
                 }
             ]
         }
     )
     for j in range(len(today_time_schedule[i])):
-        slack_notify_info[i]['blocks'].append(
+        slack_notify_info[i]['blocks'][1]['fields'].append(
             {
-                'type': 'section',
-                'text': {
-                    'type': 'mrkdwn',
-                    'text': f'<{today_time_schedule[i][j]["reservation_url"]}|{today_time_schedule[i][j]["schedule_time"]}>'
-                },
-                'accessory': {
-                    'type': 'button',
-                    'text': {
-                        'type': 'plain_text',
-                        'text': 'Reservation'
-                    },
-                    'value': f'view_alternate_{j+1}'
-                }
+                "type": "mrkdwn",
+                "text": f'<{today_time_schedule[i][j]["reservation_url"]}|{today_time_schedule[i][j]["schedule_time"]}>'
             }
         )
 
