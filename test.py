@@ -44,7 +44,7 @@ for eiga in eiga_info:
         # 初めの要素は曜日情報なので削除
         today_schedule_info_list.pop(0)
         for time in today_schedule_info_list:
-            if 'href' in time:
+            if 'href' in str(time):
                 # 時間とそれに対応する席予約のURLを辞書型で取得
                 toho_seat_url = time['href']
                 today_time_schedule[loop_index].append({ 'schedule_time':time.get_text(), 'reservation_url':toho_seat_url })
@@ -69,7 +69,6 @@ for eiga in eiga_info:
             title.append(tmp.find('a').get_text())
         else:
             title.append(tmp.get_text())
-        # title.append(eiga.find('h2', class_='title-xlarge margin-top20').find('a').get_text())
         
         # 作品の画像を取得
         image_info = str(eiga.find('div', class_='movie-image').find('noscript'))
