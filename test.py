@@ -1,5 +1,3 @@
-from ast import arguments
-from platform import release
 import requests
 from bs4 import BeautifulSoup
 import datetime
@@ -95,6 +93,9 @@ for i in range(len(title)):
         {
             'blocks': [
                 {
+                    "type": "divider"
+                },
+                {
                     "type": "section",
                     "text": {
                         "type": "mrkdwn",
@@ -104,6 +105,13 @@ for i in range(len(title)):
                         "type": "image",
                         "image_url": image_url[i],
                         "alt_text": title[i]
+                    }
+                },
+                {
+                    "type": "section",
+                    "text": {
+                        "type": "plain_text",
+                        "text": "- - - - - 通常 - - - - -"
                     }
                 },
                 {
@@ -119,7 +127,7 @@ for i in range(len(title)):
         else:
             reserve_link = f'<{today_time_schedule[i][j]["reservation_url"]}|{today_time_schedule[i][j]["schedule_time"]}>'
         
-        slack_notify_info[i]['blocks'][1]['fields'].append(
+        slack_notify_info[i]['blocks'][3]['fields'].append(
             {
                 "type": "mrkdwn",
                 "text": reserve_link
