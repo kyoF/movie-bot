@@ -1,4 +1,5 @@
 from ast import arguments
+from platform import release
 import requests
 from bs4 import BeautifulSoup
 import datetime
@@ -32,11 +33,12 @@ title = []
 image_url = []
 today_time_schedule = []
 loop_index = 0
+release_info = []
 
 slack_notify_info = []
 
 for eiga in eiga_info:
-    # 明日放映する作品を取得
+    # 明日放映する作品のタイムスケジュールを取得
     tmp_schedule = eiga.find('div', class_='movie-schedule').find('td', attrs={'data-date':str(tomorrow).replace('-', '')})
 
     if tmp_schedule:
@@ -65,14 +67,20 @@ for eiga in eiga_info:
                     sakuhin_code.append('')
 
         # 作品タイトルを取得
-        tmp = eiga.find('h2', class_='title-xlarge margin-top20')
-        if '<a href' in tmp:
-            title.append(tmp.find('a').get_text())
+        tmp_title = eiga.find('h2', class_='title-xlarge margin-top20')
+        if '<a href' in tmp_title:
+            title.append(tmp_title.find('a').get_text())
         else:
-            title.append(tmp.get_text())
+            title.append(tmp_title.get_text())
         
-        # 作品の画像を取得
-        image_info = str(eiga.find('div', class_='movie-image').find('noscript'))
+        # 作品の画像・公開日・時間等を取得
+        eiga_info_detail = eiga.find('div', class_='movie-image')
+        # 公開日・上映時間・レイティングを取得
+        eiga_release_info = eiga_info_detail.find('p', class_='data')
+        release_info.append([])
+        for info in eiga_release_info.find_all('span'):
+            release_info[loop_index].append(str(info.get_text()))
+        image_info = str(eiga_info_detail.find('noscript'))
         first_target_str = 'src="'
         second_target_str = '" width='
         first_idx = image_info.find(first_target_str)
@@ -90,7 +98,7 @@ for i in range(len(title)):
                     "type": "section",
                     "text": {
                         "type": "mrkdwn",
-                        "text": f'<{toho_reservation_url}{sakuhin_code[i]}|*{title[i]}*>'
+                        "text": f'<{toho_reservation_url}{sakuhin_code[i]}|{title[i]}> \n \n {"  ".join(release_info[i])}'
                     },
                     "accessory": {
                         "type": "image",
@@ -119,3 +127,4 @@ for i in range(len(title)):
         )
 
 slack.notify(text=f'明日 ( {str(month)}/{str(day)} {str(day_of_week)} ) の映画情報', attachments=slack_notify_info)
+# slack.notify(text=f'明日 ( {str(month)}/{str(day)} {str(day_of_week)} ) の映画情報')
