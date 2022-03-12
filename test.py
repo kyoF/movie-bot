@@ -19,76 +19,88 @@ soup = BeautifulSoup(response.content, 'html.parser')
 
 content_container_info = soup.find_all('div', class_='content-container')
 # 映画情報部分のみを取得
-eiga_info = content_container_info[1].find_all('section')
+movies = content_container_info[1].find_all('section')
 
 tomorrow = datetime.date.today() + datetime.timedelta(days=1)
 month = tomorrow.month
 day = tomorrow.day
 day_of_week = tomorrow.strftime('%a')
 
-sakuhin_code = []
-title = []
-image_url = []
-today_time_schedule = []
+all_movies = []
 loop_index = 0
-release_info = []
 
 slack_notify_info = []
 
-for eiga in eiga_info:
-    # 明日放映する作品のタイムスケジュールを取得
-    tmp_schedule = eiga.find('div', class_='movie-schedule').find('td', attrs={'data-date':str(tomorrow).replace('-', '')})
+for movie in movies:
+    movie_info = {
+        'code' : '',
+        'title' : '',
+        'details' : [],
+        'image_url' : '',
+        'time_schedules' : [],
+    }
+    time_schedules_dict = {
+        'type' : '',
+        'time_and_reservation' : []
+    }
+    time_and_reservation_dict = {
+        'time' : '',
+        'reservation' : ''
+    }
 
-    if tmp_schedule:
-        today_time_schedule.append([])
-        
-        today_schedule_info_list = tmp_schedule.find_all(['span', 'a'])
-        # 初めの要素は曜日情報なので削除
-        today_schedule_info_list.pop(0)
-        for time in today_schedule_info_list:
-            if 'href' in str(time):
-                # 時間とそれに対応する席予約のURLを辞書型で取得
-                toho_seat_url = time['href']
-                today_time_schedule[loop_index].append({ 'schedule_time':time.get_text(), 'reservation_url':toho_seat_url })
-                
+    # タイトルを取得
+    tmp_title = movie.find('h2', class_='title-xlarge margin-top20')
+    if '<a href' in tmp_title:
+        movie_info['title'] = tmp_title.find('a').get_text()
+    else:
+        movie_info['title'] = tmp_title.get_text()
+
+    # 詳細情報（公開日・上映時間・レイティング）を取得
+    tmp_image_and_details = movie.find('div', class_='movie-image')
+    tmp_details = tmp_image_and_details.find('p', class_='data')
+    for detail in tmp_details:
+        movie_info['details'].append(detail.get_text())
+
+    # 参考画像を取得
+    tmp_image_info = str(tmp_image_and_details.find('noscript'))
+    first_target_str = 'src="'
+    second_target_str = '" width='
+    first_idx = tmp_image_info.find(first_target_str)
+    second_idx = tmp_image_info.find(second_target_str)
+    tmp_image_url = tmp_image_info[first_idx+len(first_target_str):second_idx]
+    movie_info['image'] = tmp_image_url
+
+    # 上映方法（通常・字幕・4DX等）を取得
+    screening_way_list = movie.find_all('div', class_='movie-schedule').find('td', attrs={'data-date':str(tomorrow).replace('-', '')})
+    for time_schedules in screening_way_list:
+        # 上映方法を取得
+        movie_type = time_schedules.find('div', class_='movie-type')
+        time_schedules_dict['type'] = movie_type.get.text()
+        # タイムスケジュールを取得
+        tmp_time_and_reservation_url = time_schedules.find_all(['span', 'a'])
+        tmp_time_and_reservation_url.pop(0)
+        for time_and_url in tmp_time_and_reservation_url:
+            if 'href' in str(time_and_url):
+                tmp_reservation_url = time_and_url['href']
+                time_and_reservation_dict['reservation'] = tmp_reservation_url
+                time_and_reservation_dict['time'] = time_and_url.get_text()
                 # 東宝のURLから作品コードを取得
-                if len(sakuhin_code) != loop_index+1:
+                if movie_info['code'] == '':
                     first_target_str = 'sakuhin_cd='
                     second_target_str = '&screen_cd='
-                    first_idx = toho_seat_url.find(first_target_str)
-                    second_idx = toho_seat_url.find(second_target_str)
-                    tmp_sakuhin_code = toho_seat_url[first_idx+len(first_target_str):second_idx]
-                    sakuhin_code.append(tmp_sakuhin_code)
+                    first_idx = tmp_reservation_url.find(first_target_str)
+                    second_idx = tmp_reservation_url.find(second_target_str)
+                    tmp_code = tmp_reservation_url[first_idx+len(first_target_str):second_idx]
+                    movie_info['code'] = tmp_code
             else:
-                today_time_schedule[loop_index].append({ 'schedule_time':time.get_text(), 'reservation_url':'' })
-                if len(sakuhin_code) != loop_index+1:
-                    sakuhin_code.append('')
+                time_and_reservation_dict['reservation'] = ''
+                time_and_reservation_dict['time'] = time_and_url.get_text()
+            time_schedules_dict['time_and_reservation'].append(time_and_reservation_dict)
+        movie_info['time_schedules'].append(time_schedules_dict)
 
-        # 作品タイトルを取得
-        tmp_title = eiga.find('h2', class_='title-xlarge margin-top20')
-        if '<a href' in tmp_title:
-            title.append(tmp_title.find('a').get_text())
-        else:
-            title.append(tmp_title.get_text())
-        
-        # 作品の画像・公開日・時間等を取得
-        eiga_info_detail = eiga.find('div', class_='movie-image')
-        # 公開日・上映時間・レイティングを取得
-        eiga_release_info = eiga_info_detail.find('p', class_='data')
-        release_info.append([])
-        for info in eiga_release_info.find_all('span'):
-            release_info[loop_index].append(str(info.get_text()))
-        image_info = str(eiga_info_detail.find('noscript'))
-        first_target_str = 'src="'
-        second_target_str = '" width='
-        first_idx = image_info.find(first_target_str)
-        second_idx = image_info.find(second_target_str)
-        tmp_image_url = image_info[first_idx+len(first_target_str):second_idx]
-        image_url.append(tmp_image_url)
+    all_movies.append(movie_info)
 
-        loop_index += 1
-
-for i in range(len(title)):
+for i in range(len(all_movies)):
     slack_notify_info.append(
         {
             'blocks': [
