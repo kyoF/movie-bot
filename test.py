@@ -100,7 +100,7 @@ for movie in movies:
 
     all_movies.append(movie_info)
 
-for i in range(len(all_movies)):
+for movie_index, movie in enumerate(all_movies):
     slack_notify_info.append(
         {
             'blocks': [
@@ -111,40 +111,42 @@ for i in range(len(all_movies)):
                     "type": "section",
                     "text": {
                         "type": "mrkdwn",
-                        "text": f'<{toho_reservation_url}{sakuhin_code[i]}|{title[i]}> \n \n {"  ".join(release_info[i])}'
+                        "text": f'<{toho_reservation_url}{movie["code"]}|{movie["title"]}> \n \n {"  ".join(movie["details"])}'
                     },
                     "accessory": {
                         "type": "image",
-                        "image_url": image_url[i],
-                        "alt_text": title[i]
+                        "image_url": movie["image"],
+                        "alt_text": movie["title"]
                     }
-                },
-                {
-                    "type": "section",
-                    "text": {
-                        "type": "plain_text",
-                        "text": "- - - - - 通常 - - - - -"
-                    }
-                },
-                {
-                    "type": "section",
-                    "fields": []
                 }
             ]
         }
     )
-    for j in range(len(today_time_schedule[i])):
-        if today_time_schedule[i][j]["reservation_url"] == '':
-            reserve_link = f'{today_time_schedule[i][j]["schedule_time"]}'
-        else:
-            reserve_link = f'<{today_time_schedule[i][j]["reservation_url"]}|{today_time_schedule[i][j]["schedule_time"]}>'
-        
-        slack_notify_info[i]['blocks'][3]['fields'].append(
+    for time_schedule_index, time_schedule in enumerate(movie['time_schedule']):
+        slack_notify_info[movie_index]['blocks'].append(
             {
-                "type": "mrkdwn",
-                "text": reserve_link
+                "type": "section",
+                "text": {
+                    "type": "plain_text",
+                    "text": f'- - - - - {time_schedule["type"]} - - - - -'
+                }
+            },
+            {
+                "type": "action",
+                "elements": []
             }
         )
+        for time_and_reservation in time_schedule['time_and_reservation']:
+            slack_notify_info[movie_index]['blocks'][3]['elements'].append(
+                {
+                    'type' : 'button',
+                    'text' : {
+                        'type' : 'plain_text',
+                        'text' : time_and_reservation['time']
+                    },
+                    'url' : time_and_reservation['reservation']
+                }
+            )
 
 try:
     slack.notify(text=f'明日 ( {str(month)}/{str(day)} {str(day_of_week)} ) の映画情報', attachments=slack_notify_info)
