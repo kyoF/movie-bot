@@ -17,9 +17,6 @@ json_f.close()
 response = requests.get(sinjuku_toho_theater)
 soup = BeautifulSoup(response.content, 'html.parser')
 
-content_container_info = soup.find_all('div', class_='content-container')
-# 映画情報部分のみを取得
-movies = content_container_info[1].find_all('section')
 
 tomorrow = datetime.date.today() + datetime.timedelta(days=1)
 month = tomorrow.month
@@ -30,6 +27,10 @@ all_movies = []
 loop_index = 0
 
 slack_notify_info = []
+
+content_container_info = soup.find_all('div', class_='content-container')
+# 映画情報部分のみを取得
+movies = content_container_info[1].find_all('section')
 
 for movie in movies:
     movie_info = {
@@ -71,19 +72,25 @@ for movie in movies:
     movie_info['image'] = tmp_image_url
 
     # 上映方法（通常・字幕・4DX等）を取得
-    screening_way_list = movie.find_all('div', class_='movie-schedule').find('td', attrs={'data-date':str(tomorrow).replace('-', '')})
-    for time_schedules in screening_way_list:
-        # 上映方法を取得
-        movie_type = time_schedules.find('div', class_='movie-type')
-        time_schedules_dict['type'] = movie_type.get.text()
-        # タイムスケジュールを取得
-        tmp_time_and_reservation_url = time_schedules.find_all(['span', 'a'])
-        tmp_time_and_reservation_url.pop(0)
-        for time_and_url in tmp_time_and_reservation_url:
-            if 'href' in str(time_and_url):
-                tmp_reservation_url = time_and_url['href']
+    movie_schedules = movie.find_all('div', class_='movie-schedule')
+    for movie_schedule in movie_schedules:
+        movie_type = movie_schedule.find('div', class_='movie-type')
+        try:
+            time_schedules_dict['type'] = movie_type.get_text()
+        except:
+            time_schedules_dict['type'] = '通常'
+        try:
+            tomorrow_movie_schedule = movie_schedule.find('td', attrs={'data-date':str(tomorrow).replace('-', '')}).find_all('a')
+        except:
+            tomorrow_movie_schedule = None
+
+    if tomorrow_movie_schedule:
+        for time_schedule in tomorrow_movie_schedule:
+            # タイムスケジュールを取得
+            if 'href' in str(time_schedule):
+                tmp_reservation_url = time_schedule['href']
                 time_and_reservation_dict['reservation'] = tmp_reservation_url
-                time_and_reservation_dict['time'] = time_and_url.get_text()
+                time_and_reservation_dict['time'] = time_schedule.get_text()
                 # 東宝のURLから作品コードを取得
                 if movie_info['code'] == '':
                     first_target_str = 'sakuhin_cd='
@@ -94,9 +101,12 @@ for movie in movies:
                     movie_info['code'] = tmp_code
             else:
                 time_and_reservation_dict['reservation'] = ''
-                time_and_reservation_dict['time'] = time_and_url.get_text()
+                time_and_reservation_dict['time'] = time_schedule.get_text()
             time_schedules_dict['time_and_reservation'].append(time_and_reservation_dict)
-        movie_info['time_schedules'].append(time_schedules_dict)
+    else:
+        time_schedules_dict['time_and_reservation'].append(time_and_reservation_dict)
+
+    movie_info['time_schedules'].append(time_schedules_dict)
 
     all_movies.append(movie_info)
 
@@ -122,36 +132,56 @@ for movie_index, movie in enumerate(all_movies):
             ]
         }
     )
-    for time_schedule_index, time_schedule in enumerate(movie['time_schedule']):
-        slack_notify_info[movie_index]['blocks'].append(
-            {
-                "type": "section",
-                "text": {
-                    "type": "plain_text",
-                    "text": f'- - - - - {time_schedule["type"]} - - - - -'
-                }
-            },
-            {
-                "type": "action",
-                "elements": []
-            }
-        )
-        for time_and_reservation in time_schedule['time_and_reservation']:
-            slack_notify_info[movie_index]['blocks'][3]['elements'].append(
+    for time_schedule_index, time_schedule in enumerate(movie['time_schedules']):
+        if movie['time_schedules'][0]['time_and_reservation'][0]['time'] == '':
+            slack_notify_info[movie_index]['blocks'].append(
                 {
-                    'type' : 'button',
+                    'type' : "section",
                     'text' : {
                         'type' : 'plain_text',
-                        'text' : time_and_reservation['time']
-                    },
-                    'url' : time_and_reservation['reservation']
+                        'text' : f'- - - - - {time_schedule["type"]} - - - - -'
+                        },
                 }
             )
+            slack_notify_info[movie_index]['blocks'].append(
+                {
+                    'type' : 'section',
+                    'text' : {
+                        'type' : 'plain_text',
+                        'text' : '上映情報なし'
+                    }
+                }
+            )
+        else:
+            slack_notify_info[movie_index]['blocks'].append(
+                {
+                    "type": "section",
+                    "text": {
+                        "type": "plain_text",
+                        "text": f'- - - - - {time_schedule["type"]} - - - - -'
+                    }
+                }
+            )
+            slack_notify_info[movie_index]['blocks'].append(
+                {
+                    "type": "actions",
+                    "elements": []
+                }
+            )
+            for time_and_reservation in time_schedule['time_and_reservation']:
+                slack_notify_info[movie_index]['blocks'][3]['elements'].append(
+                    {
+                        'type' : 'button',
+                        'text' : {
+                            'type' : 'plain_text',
+                            'text' : time_and_reservation['time']
+                        },
+                        'url' : time_and_reservation['reservation']
+                    }
+                )
 
-try:
-    slack.notify(text=f'明日 ( {str(month)}/{str(day)} {str(day_of_week)} ) の映画情報', attachments=slack_notify_info)
-    # slack.notify(text=f'明日 ( {str(month)}/{str(day)} {str(day_of_week)} ) の映画情報')
-except Exception as e:
-    print('エラー')
-    print(e)
-    raise Exception(e)
+with open('testdata.py', 'w') as f:
+    print(slack_notify_info, file=f)
+
+slack.notify(text=f'明日 ( {str(month)}/{str(day)} {str(day_of_week)} ) の映画情報', attachments=slack_notify_info)
+# slack.notify(text=f'明日 ( {str(month)}/{str(day)} {str(day_of_week)} ) の映画情報')
