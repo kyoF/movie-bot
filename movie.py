@@ -5,29 +5,24 @@ import slackweb
 import json
 
 # 取得先のページ
-sinjuku_toho_theater = 'https://eiga.com/theater/13/130201/3263/'
-toho_reservation_url = 'https://hlo.tohotheater.jp/net/movie/TNPI3060J01.do?sakuhin_cd='
+json_file = open('slack_info.json', 'r')
+json_data = json.load(json_file)
+sinjuku_toho_theater = json_data['target_url_scraping_sinjuku_toho_theater']
+toho_reservation_url = json_data['toho_reservation_url_without_sakuhin_cd']
+json_file.close()
 
-# slackへの通知設定
-json_f = open('slack_info.json', 'r')
-json_data = json.load(json_f)
-slack = slackweb.Slack(url=json_data['incoming_webhook_url'])
-json_f.close()
-
-response = requests.get(sinjuku_toho_theater)
-soup = BeautifulSoup(response.content, 'html.parser')
-
-
+# 明日の日付と曜日情報を取得する
 tomorrow = datetime.date.today() + datetime.timedelta(days=1)
 month = tomorrow.month
 day = tomorrow.day
 day_of_week = tomorrow.strftime('%a')
 
-all_movies = []
+all_movies = [] # 全ての映画情報を入れる
 loop_index = 0
+slack_notify_info = [] # slackに通知するときに渡すリッチテキスト
 
-slack_notify_info = []
-
+response = requests.get(sinjuku_toho_theater)
+soup = BeautifulSoup(response.content, 'html.parser')
 content_container_info = soup.find_all('div', class_='content-container')
 # 映画情報部分のみを取得
 movies = content_container_info[1].find_all('section')
@@ -186,4 +181,9 @@ for movie_index, movie in enumerate(all_movies):
                     }
                 )
 
+# slackへの通知設定
+json_file = open('slack_info.json', 'r')
+json_data = json.load(json_file)
+slack = slackweb.Slack(url=json_data['incoming_webhook_url'])
+json_file.close()
 slack.notify(text=f'明日 ( {str(month)}/{str(day)} {str(day_of_week)} ) の映画情報', attachments=slack_notify_info)
