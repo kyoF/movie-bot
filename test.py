@@ -187,4 +187,3 @@ for movie_index, movie in enumerate(all_movies):
                 )
 
 slack.notify(text=f'明日 ( {str(month)}/{str(day)} {str(day_of_week)} ) の映画情報', attachments=slack_notify_info)
-# slack.notify(text=f'明日 ( {str(month)}/{str(day)} {str(day_of_week)} ) の映画情報')
