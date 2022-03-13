@@ -75,41 +75,42 @@ for movie in movies:
             time_schedules_dict['type'] = movie_type.get_text()
         except:
             time_schedules_dict['type'] = '通常'
-        try:
-            print(movie_schedule.find('td', attrs={'data-date':str(tomorrow).replace('-', '')}))
-            tomorrow_movie_schedule = movie_schedule.find('td', attrs={'data-date':str(tomorrow).replace('-', '')}).find_all('a')
-        except:
-            tomorrow_movie_schedule = None
-
-        if tomorrow_movie_schedule:
-            for time_schedule in tomorrow_movie_schedule:
+        
+        tomorrow_movie_schedules = movie_schedule.find_all('td', attrs={'data-date':str(tomorrow).replace('-', '')})
+        for time_schedule in tomorrow_movie_schedules:
+            try:
+                tomorrow_time_and_reservation = time_schedule.find_all('a')
+            except:
+                tomorrow_time_and_reservation = None
+            if tomorrow_time_and_reservation:
+                for time_schedule in tomorrow_time_and_reservation:
+                    time_and_reservation_dict = {
+                        'time' : '',
+                        'reservation' : ''
+                    }
+                    # タイムスケジュールを取得
+                    if 'href' in str(time_schedule):
+                        tmp_reservation_url = time_schedule['href']
+                        time_and_reservation_dict['reservation'] = tmp_reservation_url
+                        time_and_reservation_dict['time'] = time_schedule.get_text()
+                        # 東宝のURLから作品コードを取得
+                        if movie_info['code'] == '':
+                            first_target_str = 'sakuhin_cd='
+                            second_target_str = '&screen_cd='
+                            first_idx = tmp_reservation_url.find(first_target_str)
+                            second_idx = tmp_reservation_url.find(second_target_str)
+                            tmp_code = tmp_reservation_url[first_idx+len(first_target_str):second_idx]
+                            movie_info['code'] = tmp_code
+                    else:
+                        time_and_reservation_dict['reservation'] = ''
+                        time_and_reservation_dict['time'] = time_schedule.get_text()
+                    time_schedules_dict['time_and_reservation'].append(time_and_reservation_dict)
+            else:
                 time_and_reservation_dict = {
                     'time' : '',
                     'reservation' : ''
                 }
-                # タイムスケジュールを取得
-                if 'href' in str(time_schedule):
-                    tmp_reservation_url = time_schedule['href']
-                    time_and_reservation_dict['reservation'] = tmp_reservation_url
-                    time_and_reservation_dict['time'] = time_schedule.get_text()
-                    # 東宝のURLから作品コードを取得
-                    if movie_info['code'] == '':
-                        first_target_str = 'sakuhin_cd='
-                        second_target_str = '&screen_cd='
-                        first_idx = tmp_reservation_url.find(first_target_str)
-                        second_idx = tmp_reservation_url.find(second_target_str)
-                        tmp_code = tmp_reservation_url[first_idx+len(first_target_str):second_idx]
-                        movie_info['code'] = tmp_code
-                else:
-                    time_and_reservation_dict['reservation'] = ''
-                    time_and_reservation_dict['time'] = time_schedule.get_text()
                 time_schedules_dict['time_and_reservation'].append(time_and_reservation_dict)
-        else:
-            time_and_reservation_dict = {
-                'time' : '',
-                'reservation' : ''
-            }
-            time_schedules_dict['time_and_reservation'].append(time_and_reservation_dict)
 
         movie_info['time_schedules'].append(time_schedules_dict)
 
