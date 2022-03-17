@@ -1,0 +1,92 @@
+{
+	"blocks": [
+		{
+			"type": "header",
+			"text": {
+				"type": "plain_text",
+				"text": "This is a header block"
+			}
+		},
+		{
+			"type": "divider"
+		},
+		{
+			"type": "section",
+			"text": {
+				"type": "mrkdwn",
+				"text": "title \n \n detail"
+			},
+			"accessory": {
+				"type": "image",
+				"image_url": "https://eiga.k-img.com/images/movie/95553/photo/32dcca0a088e09cd/320.jpg?1639527702",
+				"alt_text": "title"
+			}
+		},
+		{
+			"type": "section",
+			"text": {
+				"type": "plain_text",
+				"text": "This is a plain text section block."
+			}
+		},
+		{
+			"type": "actions",
+			"elements": [
+				{
+					"type": "button",
+					"text": {
+						"type": "plain_text",
+						"text": "Click Me"
+					}
+				},
+				{
+					"type": "button",
+					"text": {
+						"type": "plain_text",
+						"text": "Click Me"
+					}
+				},
+				{
+					"type": "button",
+					"text": {
+						"type": "plain_text",
+						"text": "Click Me"
+					}
+				}
+			]
+		},
+		{
+			"type": "section",
+			"text": {
+				"type": "plain_text",
+				"text": "This is a plain text section block."
+			}
+		},
+		{
+			"type": "actions",
+			"elements": [
+				{
+					"type": "button",
+					"text": {
+						"type": "plain_text",
+						"text": "Click Me"
+					}
+				},
+				{
+					"type": "button",
+					"text": {
+						"type": "plain_text",
+						"text": "Click Me"
+					}
+				},
+				{
+					"type": "button",
+					"text": {
+						"type": "plain_text",
+						"text": "Click Me"
+					}
+				}
+			]
+		}
+	]
+}

@@ -1,7 +1,8 @@
 function movieBot() {
-  const incommingWebhookUrl = 'incomming webhookのURL';
+  const incommingWebhookUrl = "incomming webhookのURL";
   const targetUrl = "https://eiga.com/theater/13/130201/3263/";
-  const toho = "";
+  const toho =
+    "https://hlo.tohotheater.jp/net/movie/TNPI3060J01.do?sakuhin_cd=";
   const payload = {
     unfurl_links: false,
     username: "MOVIE BOT",
@@ -17,27 +18,26 @@ function movieBot() {
     ],
   };
   const html = UrlFetchApp.fetch(targetUrl).getContentText("UTF-8");
-  
+
   // タイトルを取得
-  const title = pickUpTitleTest(html)
+  const title = pickUpTitleTest(html);
   // titleをslackフォーマットのテキストに格納
-  payload.blocks.push(outputTextFormOfSlack(title))
+  payload.blocks.push(outputTextFormOfSlack(title));
   // slackに通知
   slackNotify(incommingWebhookUrl, payload);
 }
 
-const pickUpTitleTest = (html) => Parser.data(html).from("<title>").to("</title>").build();
+const pickUpTitleTest = (html) =>
+  Parser.data(html).from("<title>").to("</title>").build();
 
 const outputTextFormOfSlack = (title) => {
-  return(
-    {
-      type: "section",
-      text: {
-        type: "mrkdwn",
-        text: title,
-      }
-    }
-  )
+  return {
+    type: "section",
+    text: {
+      type: "mrkdwn",
+      text: title,
+    },
+  };
 };
 
 const slackNotify = (incommingWebhookUrl, payload) => {
@@ -47,4 +47,4 @@ const slackNotify = (incommingWebhookUrl, payload) => {
     payload: JSON.stringify(payload),
   };
   UrlFetchApp.fetch(incommingWebhookUrl, options);
-}
+};
