@@ -1,2 +1,5 @@
-slackTest*
 slack_info.json
+
+# movie_bot
+movie_bot/
+!./movie_bot/movie.py
