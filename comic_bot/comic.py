@@ -1,11 +1,27 @@
 import requests
 from bs4 import BeautifulSoup
 import json
+import datetime
 
 def main():
-    # target_url = get_url_from_json('scraping_target_url')
-    target_url = 'https://calendar.gameiroiro.com/manga.php?year=2022&month=3'
+    # 明日の日付と曜日を取得する
+    tomorrow = datetime.date.today() + datetime.timedelta(days=1)
+    year = tomorrow.year
+    month = tomorrow.month
+    day = tomorrow.day
+    day_of_week = tomorrow.strftime('%a')
+
+    target_url = get_url_from_json('target_scraped_url').format(year, month)
     comics = get_comic_info_from_html(target_url)
+    comics_list = comics.find_all('tr')
+
+    for index, comic in enumerate(comics_list):
+        if index+1 == day:
+            works_of_day = comic.find('div', class_='products-td').find_all('div', class_='div-wrap')
+            
+            break
+
+    
 
 def get_url_from_json(key):
     with open('url_info.json') as f:
