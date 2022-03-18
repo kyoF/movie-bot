@@ -144,7 +144,7 @@ for movie in all_movies:
         }
     )
     for time_schedule_index, time_schedule in enumerate(movie['time_schedules']):
-        if movie['time_schedules'][0]['time_and_reservation'][0]['time'] == '':
+        if movie['time_schedules'][time_schedule_index]['time_and_reservation'][0]['time'] == '':
             slack_notify_info[0]['blocks'].append(
                 {
                     'type': "section",
@@ -158,8 +158,8 @@ for movie in all_movies:
                 {
                     'type': 'section',
                     'text': {
-                        'type': 'plain_text',
-                        'text': '上映情報なし'
+                        'type': 'mrkdwn',
+                        'text': f'{str(month)}/{str(day)}の上映情報なし\n 別日のスケジュールは<{sinjuku_toho_theater}|こちら>から'
                     }
                 }
             )
@@ -196,7 +196,5 @@ json_file = open('slack_info.json', 'r')
 json_data = json.load(json_file)
 slack = slackweb.Slack(url=json_data['incoming_webhook_url'])
 json_file.close()
-with open('testdata.py', 'w') as f:
-    print(slack_notify_info, file=f)
 slack.notify(
     text=f'明日 ( {str(month)}/{str(day)} {str(day_of_week)} ) の映画情報', attachments=slack_notify_info)
