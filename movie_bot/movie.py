@@ -5,7 +5,7 @@ import slackweb
 import json
 
 # 取得先のページ
-json_file = open('slack_info.json', 'r')
+json_file = open('info_info.json', 'r')
 json_data = json.load(json_file)
 sinjuku_toho_theater = json_data['target_url_scraping_sinjuku_toho_theater']
 toho_reservation_url = json_data['toho_reservation_url_without_sakuhin_cd']

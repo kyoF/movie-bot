@@ -1,6 +1,13 @@
-slack_info.json
+# slackの通知テスト
+slackTest*
+
+# 共通
+url_info.json
+
+# comic_bot
+/comic_bot
+!./comic_bot/comic.py
 
 # movie_bot
 movie_bot/
 !./movie_bot/movie.py
-url_info.json
