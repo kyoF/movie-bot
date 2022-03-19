@@ -4,87 +4,159 @@ import datetime
 import slackweb
 import json
 
-# 取得先のページ
-json_file = open('url_info.json', 'r')
-json_data = json.load(json_file)
-sinjuku_toho_theater = json_data['target_url_scraping_sinjuku_toho_theater']
-toho_reservation_url = json_data['toho_reservation_url_without_sakuhin_cd']
-json_file.close()
 
-# 明日の日付と曜日情報を取得する
-tomorrow = datetime.date.today() + datetime.timedelta(days=1)
-month = tomorrow.month
-day = tomorrow.day
-day_of_week = tomorrow.strftime('%a')
+def main():
+    tomorrow = datetime.date.today() + datetime.timedelta(days=1)
+    month = tomorrow.month
+    day = tomorrow.day
+    day_of_week = tomorrow.strftime('%a')
 
-all_movies = []  # 全ての映画情報を入れる
-loop_index = 0
-slack_notify_info = []  # slackに通知するときに渡すリッチテキスト
+    target_url = get_url_from_json('target_scraped_url')
+    toho_reservation_url = get_url_from_json(
+        'toho_reservation_url_without_sakuhin_cd')
 
-response = requests.get(sinjuku_toho_theater)
-soup = BeautifulSoup(response.content, 'html.parser')
-content_container_info = soup.find_all('div', class_='content-container')
-# 映画情報部分のみを取得
-movies = content_container_info[1].find_all('section')
+    all_movies = []
+    slack_notify_info = []
 
-for movie in movies:
-    movie_info = {
-        'code': '',
-        'title': '',
-        'details': [],
-        'image_url': '',
-        'time_schedules': [],
-    }
+    html = get_movies_from_html(target_url)
+    movies_list_form_html = html.find_all(
+        'div', class_='content-container')[1].find_all('section')
 
-    # タイトルを取得
-    tmp_title = movie.find('h2', class_='title-xlarge margin-top20')
-    if '<a href' in tmp_title:
-        movie_info['title'] = tmp_title.find('a').get_text()
-    else:
-        movie_info['title'] = tmp_title.get_text()
+    for movie in movies_list_form_html:
+        movie_info = {
+            'code': '',
+            'title': '',
+            'details': [],
+            'image_url': '',
+            'time_schedules': [],
+        }
 
-    # 詳細情報（公開日・上映時間・レイティング）を取得
-    tmp_image_and_details = movie.find('div', class_='movie-image')
-    tmp_details = tmp_image_and_details.find('p', class_='data')
-    for detail in tmp_details:
-        movie_info['details'].append(detail.get_text())
+        movie_info['code'] = get_code(movie)
+        movie_info['title'] = get_title(movie)
+        movie_info['details'] = get_details_list(movie)
+        movie_info['image_url'] = get_image_url(movie)
+        movie_info['time_schedules'] = get_time_schedules_list(movie, tomorrow)
 
-    # 参考画像を取得
-    tmp_image_info = str(tmp_image_and_details.find('noscript'))
+        all_movies.append(movie_info)
+
+
+def get_url_from_json(key):
+    with open('url_info.json') as f:
+        json_data = json.load(f)
+        return json_data[key]
+
+
+def get_movies_from_html(url):
+    response = requests.get(url)
+    return BeautifulSoup(response.content, 'html.parser')
+
+
+def get_title(movie):
+    title = movie.find('h2', class_='title-xlarge margin-top20')
+    if '<a href' in title:
+        return title.find('a').get_text()
+    return title.get_text()
+
+
+def get_details_list(movie):
+    details = movie.find('div', class_='movie-image').find('p', class_='data')
+    details_list = []
+    for elem in details:
+        details_list.append(elem.get_text())
+    return details_list
+
+
+def get_image_url(movie):
+    image = str(movie.find('div', class_='movie-image').find('noscript'))
     first_target_str = 'src="'
     second_target_str = '" width='
-    first_idx = tmp_image_info.find(first_target_str)
-    second_idx = tmp_image_info.find(second_target_str)
-    tmp_image_url = tmp_image_info[first_idx+len(first_target_str):second_idx]
-    movie_info['image'] = tmp_image_url
+    first_idx = image.find(first_target_str)
+    second_idx = image.find(second_target_str)
+    image_url = image[first_idx+len(first_target_str):second_idx]
+    return image_url
 
-    # 上映方法（通常・字幕・4DX等）を取得
+
+def get_time_schedules_list(movie, tomorrow):
     movie_schedules = movie.find_all('div', class_='movie-schedule')
+    time_schedules_list = []
     for movie_schedule in movie_schedules:
         time_schedules_dict = {
             'type': '',
             'time_and_reservation': []
         }
-        movie_type = movie_schedule.find('div', class_='movie-type')
-        try:
-            time_schedules_dict['type'] = movie_type.get_text()
-        except:
-            time_schedules_dict['type'] = '通常'
 
-        tomorrow_movie_schedules = movie_schedule.find(
-            'td', attrs={'data-date': str(tomorrow).replace('-', '')})
-        try:
-            tomorrow_time_and_reservation = tomorrow_movie_schedules.find_all(
-                'a')
-        except:
-            tomorrow_time_and_reservation = None
+        time_schedules_dict['type'] = get_type(movie_schedule)
+        time_schedules_dict['time_and_reservation'] = get_time_and_reservation_list(
+            movie_schedule, tomorrow)
 
+        time_schedules_list.append(time_schedules_dict)
+
+    return time_schedules_list
+
+
+def get_type(movie_schedule):
+    movie_type = movie_schedule.find('div', class_='movie-type')
+    try:
+        return movie_type.get_text()
+    except:
+        return '通常'
+
+
+def get_time_and_reservation_list(movie_schedule, tomorrow):
+    time_and_reservation = []
+    tomorrow_movie_schedules = movie_schedule.find(
+        'td', attrs={'data-date': str(tomorrow).replace('-', '')})
+    try:
+        tomorrow_time_and_reservation = tomorrow_movie_schedules.find_all('a')
+    except:
+        tomorrow_time_and_reservation = None
+    if tomorrow_time_and_reservation:
+        for time_schedule in tomorrow_time_and_reservation:
+            time_and_reservation_dict = {
+                'time': '',
+                'reservation': ''
+            }
+
+            time_and_reservation['time'] = get_time(time_schedule)
+            time_and_reservation['reservation'] = get_reservation(
+                time_schedule)
+
+            time_and_reservation.append(time_and_reservation_dict)
+
+    else:
+        time_and_reservation_dict = {
+            'time': '',
+            'reservation': ''
+        }
+        time_and_reservation.append(time_and_reservation_dict)
+
+    return time_and_reservation
+
+
+def get_time(time_schedule):
+    return time_schedule.get_text()
+
+
+def get_reservation(time_schedule):
+    if 'href' in str(time_schedule):
+        return time_schedule['href']
+    return ''
+
+
+def get_code(movie):
+    url = ''
+    first_target_str = 'sakuhin_cd='
+    second_target_str = '&screen_cd='
+    first_idx = url.find(first_target_str)
+    second_idx = url.find(second_target_str)
+    code = url[first_idx + len(first_target_str):second_idx]
+    return code
+
+
+for movie in movies:
+    for movie_schedule in movie_schedules:
         if tomorrow_time_and_reservation:
             for time_schedule in tomorrow_time_and_reservation:
-                time_and_reservation_dict = {
-                    'time': '',
-                    'reservation': ''
-                }
                 # タイムスケジュールを取得
                 if 'href' in str(time_schedule):
                     tmp_reservation_url = time_schedule['href']
@@ -107,17 +179,6 @@ for movie in movies:
                     )
                 time_schedules_dict['time_and_reservation'].append(
                     time_and_reservation_dict)
-        else:
-            time_and_reservation_dict = {
-                'time': '',
-                'reservation': ''
-            }
-            time_schedules_dict['time_and_reservation'].append(
-                time_and_reservation_dict)
-
-        movie_info['time_schedules'].append(time_schedules_dict)
-
-    all_movies.append(movie_info)
 
 for movie_index, movie in enumerate(all_movies):
     slack_notify_info.append(
@@ -198,3 +259,6 @@ slack.notify(
     text=f'明日 ( {str(month)}/{str(day)} {str(day_of_week)} ) の映画情報',
     attachments=slack_notify_info
 )
+
+if __name__ == '__main__':
+    main()
