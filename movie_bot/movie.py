@@ -19,11 +19,7 @@ day_of_week = tomorrow.strftime('%a')
 
 all_movies = []  # 全ての映画情報を入れる
 loop_index = 0
-slack_notify_info = [
-    {
-        "blocks": []
-    }
-]  # slackに通知するときに渡すリッチテキスト
+slack_notify_info = []  # slackに通知するときに渡すリッチテキスト
 
 response = requests.get(sinjuku_toho_theater)
 soup = BeautifulSoup(response.content, 'html.parser')
@@ -123,29 +119,31 @@ for movie in movies:
 
     all_movies.append(movie_info)
 
-for movie in all_movies:
-    slack_notify_info[0]['blocks'].append(
+for movie_index, movie in enumerate(all_movies):
+    slack_notify_info.append(
         {
-            "type": "divider"
-        }
-    )
-    slack_notify_info[0]['blocks'].append(
-        {
-            "type": "section",
-            "text": {
-                "type": "mrkdwn",
-                "text": f'<{toho_reservation_url}{movie["code"]}|{movie["title"]}> \n \n {"  ".join(movie["details"])}'
-            },
-            "accessory": {
-                "type": "image",
-                "image_url": movie["image"],
-                "alt_text": movie["title"]
-            }
+            "blocks": [
+                {
+                    "type": "divider"
+                },
+                {
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": f'<{toho_reservation_url}{movie["code"]}|{movie["title"]}> \n \n {" ".join(movie["details"])}'
+                    },
+                    "accessory": {
+                        "type": "image",
+                        "image_url": movie["image"],
+                        "alt_text": movie["title"]
+                    }
+                }
+            ]
         }
     )
     for time_schedule_index, time_schedule in enumerate(movie['time_schedules']):
         if movie['time_schedules'][time_schedule_index]['time_and_reservation'][0]['time'] == '':
-            slack_notify_info[0]['blocks'].append(
+            slack_notify_info[movie_index]['blocks'].append(
                 {
                     'type': "section",
                     'text': {
@@ -154,7 +152,7 @@ for movie in all_movies:
                     },
                 }
             )
-            slack_notify_info[0]['blocks'].append(
+            slack_notify_info[movie_index]['blocks'].append(
                 {
                     'type': 'section',
                     'text': {
@@ -164,7 +162,7 @@ for movie in all_movies:
                 }
             )
         else:
-            slack_notify_info[0]['blocks'].append(
+            slack_notify_info[movie_index]['blocks'].append(
                 {
                     "type": "section",
                     "text": {
@@ -173,14 +171,14 @@ for movie in all_movies:
                     }
                 }
             )
-            slack_notify_info[0]['blocks'].append(
+            slack_notify_info[movie_index]['blocks'].append(
                 {
                     "type": "actions",
                     "elements": []
                 }
             )
-            for time_and_reservation in time_schedule['time_and_reservation']:
-                slack_notify_info[0]['blocks'][len(slack_notify_info[0]['blocks'])-1]['elements'].append(
+            for time_and_reservation_index, time_and_reservation in enumerate(time_schedule['time_and_reservation']):
+                slack_notify_info[movie_index]['blocks'][2+(time_schedule_index*2+1)]['elements'].append(
                     {
                         'type': 'button',
                         'text': {
