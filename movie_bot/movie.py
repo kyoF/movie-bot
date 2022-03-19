@@ -7,16 +7,10 @@ import json
 
 def main():
     tomorrow = datetime.date.today() + datetime.timedelta(days=1)
-    month = tomorrow.month
-    day = tomorrow.day
-    day_of_week = tomorrow.strftime('%a')
 
     target_url = get_url_from_json('target_scraped_url')
-    toho_reservation_url = get_url_from_json(
-        'toho_reservation_url_without_sakuhin_cd')
 
     all_movies = []
-    slack_notify_info = []
 
     html = get_movies_from_html(target_url)
     movies_list_form_html = html.find_all(
@@ -38,6 +32,10 @@ def main():
         movie_info['time_schedules'] = get_time_schedules_list(movie, tomorrow)
 
         all_movies.append(movie_info)
+
+    slack_notify_text = adjust_slack_notify_text(all_movies)
+
+    slack_notify(tomorrow, slack_notify_text)
 
 
 def get_url_from_json(key):
@@ -144,7 +142,7 @@ def get_reservation(time_schedule):
 
 
 def get_code(movie):
-    url = ''
+    url = str(movie.find('a', class_='btn ticket2')['href'])
     first_target_str = 'sakuhin_cd='
     second_target_str = '&screen_cd='
     first_idx = url.find(first_target_str)
@@ -153,112 +151,119 @@ def get_code(movie):
     return code
 
 
-for movie in movies:
-    for movie_schedule in movie_schedules:
-        if tomorrow_time_and_reservation:
-            for time_schedule in tomorrow_time_and_reservation:
-                # タイムスケジュールを取得
-                if 'href' in str(time_schedule):
-                    tmp_reservation_url = time_schedule['href']
-                    time_and_reservation_dict['reservation'] = tmp_reservation_url
-                    time_and_reservation_dict['time'] = time_schedule.get_text(
-                    )
-                    # 東宝のURLから作品コードを取得
-                    if movie_info['code'] == '':
-                        first_target_str = 'sakuhin_cd='
-                        second_target_str = '&screen_cd='
-                        first_idx = tmp_reservation_url.find(first_target_str)
-                        second_idx = tmp_reservation_url.find(
-                            second_target_str)
-                        tmp_code = tmp_reservation_url[first_idx +
-                                                       len(first_target_str):second_idx]
-                        movie_info['code'] = tmp_code
-                else:
-                    time_and_reservation_dict['reservation'] = ''
-                    time_and_reservation_dict['time'] = time_schedule.get_text(
-                    )
-                time_schedules_dict['time_and_reservation'].append(
-                    time_and_reservation_dict)
+def adjust_slack_notify_text(all_movies):
+    slack_notify_text = create_slack_text_blocks(all_movies)
+    return slack_notify_text
 
-for movie_index, movie in enumerate(all_movies):
-    slack_notify_info.append(
-        {
-            "blocks": [
-                {
-                    "type": "divider"
-                },
-                {
-                    "type": "section",
-                    "text": {
-                        "type": "mrkdwn",
-                        "text": f'<{toho_reservation_url}{movie["code"]}|{movie["title"]}> \n \n {" ".join(movie["details"])}'
-                    },
-                    "accessory": {
-                        "type": "image",
-                        "image_url": movie["image"],
-                        "alt_text": movie["title"]
-                    }
-                }
-            ]
-        }
-    )
-    for time_schedule_index, time_schedule in enumerate(movie['time_schedules']):
-        if movie['time_schedules'][time_schedule_index]['time_and_reservation'][0]['time'] == '':
-            slack_notify_info[movie_index]['blocks'].append(
-                {
-                    'type': "section",
-                    'text': {
-                        'type': 'plain_text',
-                        'text': f'- - - - - {time_schedule["type"]} - - - - -'
-                    },
-                }
-            )
-            slack_notify_info[movie_index]['blocks'].append(
-                {
-                    'type': 'section',
-                    'text': {
-                        'type': 'mrkdwn',
-                        'text': f'{str(month)}/{str(day)}の上映情報なし\n 別日のスケジュールは<{sinjuku_toho_theater}|こちら>から'
-                    }
-                }
-            )
-        else:
-            slack_notify_info[movie_index]['blocks'].append(
-                {
-                    "type": "section",
-                    "text": {
-                        "type": "plain_text",
-                        "text": f'- - - - - {time_schedule["type"]} - - - - -'
-                    }
-                }
-            )
-            slack_notify_info[movie_index]['blocks'].append(
-                {
-                    "type": "actions",
-                    "elements": []
-                }
-            )
-            for time_and_reservation_index, time_and_reservation in enumerate(time_schedule['time_and_reservation']):
-                slack_notify_info[movie_index]['blocks'][2+(time_schedule_index*2+1)]['elements'].append(
+
+def create_slack_text_blocks(all_movies, slack_text_list):
+    toho_reservation_url = get_url_from_json(
+        'toho_reservation_url_without_sakuhin_cd')
+    for movie_index, movie in enumerate(all_movies):
+        slack_text_list.append(
+            {
+                "blicks": [
                     {
-                        'type': 'button',
-                        'text': {
-                            'type': 'plain_text',
-                            'text': time_and_reservation['time']
+                        'type': 'divider'
+                    },
+                    {
+                        'type': 'section',
+                        'type': {
+                            'type': 'mrkdwn',
+                            'text': f'<{toho_reservation_url}{movie["code"]}|{movie["title"]}> \n \n {" ".join(movie["details"])}'
                         },
-                        'url': time_and_reservation['reservation']
+                        "accessory": {
+                            "type": "image",
+                            "image_url": movie["image"],
+                            "alt_text": movie["title"]
+                        }
                     }
-                )
+                ]
+            }
+        )
+        slack_text_list.append()
+    return slack_text_list
 
-# slackへの通知設定
-json_file = open('url_info.json', 'r')
-json_data = json.load(json_file)
-slack = slackweb.Slack(url=json_data['incoming_webhook_url'])
-json_file.close()
-slack.notify(
-    text=f'明日 ( {str(month)}/{str(day)} {str(day_of_week)} ) の映画情報',
-    attachments=slack_notify_info
-)
+
+def slack_notify(tomorrow, slack_notify_text):
+    month = tomorrow.month
+    day = tomorrow.day
+    day_of_week = tomorrow.strftime('%a')
+    slack_url = get_url_from_json('incomming_webhook_url')
+    slack_url.notify(
+        text=f'明日 ( {str(month)}/{str(day)} {str(day_of_week)} ) の映画情報',
+        attachments=slack_notify_text
+    )
+# for movie_index, movie in enumerate(all_movies):
+#     slack_notify_info.append(
+#         {
+#             "blocks": [
+#                 {
+#                     "type": "divider"
+#                 },
+#                 {
+#                     "type": "section",
+#                     "text": {
+#                         "type": "mrkdwn",
+#                         "text": f'<{toho_reservation_url}{movie["code"]}|{movie["title"]}> \n \n {" ".join(movie["details"])}'
+#                     },
+#                     "accessory": {
+#                         "type": "image",
+#                         "image_url": movie["image"],
+#                         "alt_text": movie["title"]
+#                     }
+#                 }
+#             ]
+#         }
+#     )
+#     for time_schedule_index, time_schedule in enumerate(movie['time_schedules']):
+#         if movie['time_schedules'][time_schedule_index]['time_and_reservation'][0]['time'] == '':
+#             slack_notify_info[movie_index]['blocks'].append(
+#                 {
+#                     'type': "section",
+#                     'text': {
+#                         'type': 'plain_text',
+#                         'text': f'- - - - - {time_schedule["type"]} - - - - -'
+#                     },
+#                 }
+#             )
+#             slack_notify_info[movie_index]['blocks'].append(
+#                 {
+#                     'type': 'section',
+#                     'text': {
+#                         'type': 'mrkdwn',
+#                         'text': f'{str(month)}/{str(day)}の上映情報なし\n 別日のスケジュールは<{sinjuku_toho_theater}|こちら>から'
+#                     }
+#                 }
+#             )
+#         else:
+#             slack_notify_info[movie_index]['blocks'].append(
+#                 {
+#                     "type": "section",
+#                     "text": {
+#                         "type": "plain_text",
+#                         "text": f'- - - - - {time_schedule["type"]} - - - - -'
+#                     }
+#                 }
+#             )
+#             slack_notify_info[movie_index]['blocks'].append(
+#                 {
+#                     "type": "actions",
+#                     "elements": []
+#                 }
+#             )
+#             for time_and_reservation_index, time_and_reservation in enumerate(time_schedule['time_and_reservation']):
+#                 slack_notify_info[movie_index]['blocks'][2+(time_schedule_index*2+1)]['elements'].append(
+#                     {
+#                         'type': 'button',
+#                         'text': {
+#                             'type': 'plain_text',
+#                             'text': time_and_reservation['time']
+#                         },
+#                         'url': time_and_reservation['reservation']
+#                     }
+#                 )
+
 
 if __name__ == '__main__':
     main()
