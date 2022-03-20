@@ -33,7 +33,7 @@ def main():
 
         all_movies.append(movie_info)
 
-    slack_notify_text = adjust_slack_notify_text(all_movies)
+    slack_notify_text = adjust_slack_notify_text(all_movies, tomorrow)
 
     slack_notify(tomorrow, slack_notify_text)
 
@@ -151,12 +151,12 @@ def get_code(movie):
     return code
 
 
-def adjust_slack_notify_text(all_movies):
-    slack_notify_text = create_slack_text_blocks(all_movies)
+def adjust_slack_notify_text(all_movies, tomorrow):
+    slack_notify_text = create_slack_text_movie_info(all_movies, tomorrow)
     return slack_notify_text
 
 
-def create_slack_text_blocks(all_movies, slack_text_list):
+def create_slack_text_movie_info(all_movies, slack_text_list):
     toho_reservation_url = get_url_from_json(
         'toho_reservation_url_without_sakuhin_cd')
     for movie_index, movie in enumerate(all_movies):
@@ -181,8 +181,35 @@ def create_slack_text_blocks(all_movies, slack_text_list):
                 ]
             }
         )
-        slack_text_list.append()
+        slack_text_list[movie_index]['blocks'].append(
+            create_slack_text_movie_schedule(movie['time_schedules'], [])
+        )
     return slack_text_list
+
+
+def create_slack_text_movie_schedule(schedule_list, slack_text_list, tomorrow):
+    month = tomorrow.month
+    day = tomorrow.day
+    for schedule_index, schedule in enumerate(schedule_list):
+        if schedule_list[schedule_index]['time_and_reservation'][0]['time'] == '':
+            slack_text_list.append(
+                {
+                    'type': 'section',
+                    'text': {
+                        'type': 'plain_text',
+                        'text': f'- - - - - {schedule["type"]} - - - - -'
+                    },
+                }
+            )
+            slack_text_list.append(
+                {
+                    'type': 'section',
+                    'text': {
+                        'type': 'mrkdwn',
+                        'text': f'{str(month)}/{str(day)}の上映情報なし\n 別日のスケジュールは<{sinjuku_toho_theater}|こちら>から'
+                    }
+                }
+            )
 
 
 def slack_notify(tomorrow, slack_notify_text):
@@ -194,28 +221,6 @@ def slack_notify(tomorrow, slack_notify_text):
         text=f'明日 ( {str(month)}/{str(day)} {str(day_of_week)} ) の映画情報',
         attachments=slack_notify_text
     )
-# for movie_index, movie in enumerate(all_movies):
-#     slack_notify_info.append(
-#         {
-#             "blocks": [
-#                 {
-#                     "type": "divider"
-#                 },
-#                 {
-#                     "type": "section",
-#                     "text": {
-#                         "type": "mrkdwn",
-#                         "text": f'<{toho_reservation_url}{movie["code"]}|{movie["title"]}> \n \n {" ".join(movie["details"])}'
-#                     },
-#                     "accessory": {
-#                         "type": "image",
-#                         "image_url": movie["image"],
-#                         "alt_text": movie["title"]
-#                     }
-#                 }
-#             ]
-#         }
-#     )
 #     for time_schedule_index, time_schedule in enumerate(movie['time_schedules']):
 #         if movie['time_schedules'][time_schedule_index]['time_and_reservation'][0]['time'] == '':
 #             slack_notify_info[movie_index]['blocks'].append(
