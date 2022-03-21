@@ -6,7 +6,7 @@ import json
 
 
 def main():
-    tomorrow = datetime.date.today() + datetime.timedelta(days=1)
+    tomorrow = get_tomorrow_date()
 
     target_url = get_url_from_json('target_scraped_url')
 
@@ -29,13 +29,17 @@ def main():
         movie_info['title'] = get_title(movie)
         movie_info['details'] = get_details_list(movie)
         movie_info['image_url'] = get_image_url(movie)
-        movie_info['time_schedules'] = get_time_schedules_list(movie, tomorrow)
+        movie_info['time_schedules'] = get_time_schedules_list(movie)
 
         all_movies.append(movie_info)
 
-    slack_notify_text = adjust_slack_notify_text(all_movies, tomorrow)
+    slack_notify_text = adjust_slack_notify_text(all_movies)
 
     slack_notify(tomorrow, slack_notify_text)
+
+
+def get_tomorrow_date():
+    return datetime.date.today() + datetime.timedelta(days=1)
 
 
 def get_url_from_json(key):
@@ -151,8 +155,8 @@ def get_code(movie):
     return code
 
 
-def adjust_slack_notify_text(all_movies, tomorrow):
-    slack_notify_text = create_slack_text_movie_info(all_movies, tomorrow)
+def adjust_slack_notify_text(all_movies):
+    slack_notify_text = create_slack_text_movie_info(all_movies)
     return slack_notify_text
 
 
@@ -187,7 +191,8 @@ def create_slack_text_movie_info(all_movies, slack_text_list):
     return slack_text_list
 
 
-def create_slack_text_movie_schedule(schedule_list, slack_text_list, tomorrow):
+def create_slack_text_movie_schedule(schedule_list, slack_text_list):
+    tomorrow = get_tomorrow_date()
     month = tomorrow.month
     day = tomorrow.day
     sinjuku_toho_theater = get_url_from_json('target_scraped_url')
@@ -248,7 +253,8 @@ def create_slack_text_reserve_button(time_and_reservation, slack_text_list):
         )
 
 
-def slack_notify(tomorrow, slack_notify_text):
+def slack_notify(slack_notify_text):
+    tomorrow = get_tomorrow_date()
     month = tomorrow.month
     day = tomorrow.day
     day_of_week = tomorrow.strftime('%a')
