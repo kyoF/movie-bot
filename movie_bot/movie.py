@@ -10,13 +10,13 @@ def main():
 
     target_url = get_url_from_json('target_scraped_url')
 
-    all_movies = []
+    movies = []
 
     html = get_movies_from_html(target_url)
-    movie_list = html.find_all(
+    all_movies = html.find_all(
         'div', class_='content-container')[1].find_all('section')
 
-    for movie in movie_list:
+    for movie in all_movies:
         movie_info = {
             'code': '',
             'title': '',
@@ -31,9 +31,9 @@ def main():
         movie_info['image_url'] = get_image_url(movie)
         movie_info['schedules'] = get_schedules(movie)
 
-        all_movies.append(movie_info)
+        movies.append(movie_info)
 
-    slack_notify_text = create_slack_text_list(all_movies)
+    slack_notify_text = create_slack_text_list(movies)
 
     slack_notify(tomorrow, slack_notify_text)
 
@@ -79,17 +79,18 @@ def get_image_url(movie):
 
 
 def get_schedules(movie):
-    schedule = movie.find_all('div', class_='movie-schedule')
+    all_schedule = movie.find_all('div', class_='movie-schedule')
     schedule_list = []
-    for schedule_info in schedule:
+    for schedule_info in all_schedule:
         schedule_info_dict = {
             'type': '',
             'time_and_reservation_url': []
         }
 
-        schedule_info_dict['type'] = get_type(schedule_info)
-        schedule_info_dict['time_and_reservarion_url'] = get_time_and_reservation_url(
-            schedule_info)
+        schedule_info_dict['type'] \
+            = get_type(schedule_info)
+        schedule_info_dict['time_and_reservarion_url'] \
+            = get_time_and_reservation_url(schedule_info)
 
         schedule_list.append(schedule_info_dict)
 
@@ -109,10 +110,12 @@ def get_time_and_reservation_url(schedule_info):
     time_and_reservation_url_list = []
     schedule = schedule_info.find(
         'td', attrs={'data-date': str(tomorrow).replace('-', '')})
+
     try:
         all_time_and_reservation_url = schedule.find_all('a')
     except:
         all_time_and_reservation_url = None
+
     if time_and_reservation_url:
         for time_and_reservation_url in all_time_and_reservation_url:
             time_and_reservation_url_dict = {
@@ -120,10 +123,10 @@ def get_time_and_reservation_url(schedule_info):
                 'reservation_url': ''
             }
 
-            time_and_reservation_url_dict['time'] = get_time(
-                time_and_reservation_url)
-            time_and_reservation_url_dict['reservation_url'] = get_reservation_url(
-                time_and_reservation_url)
+            time_and_reservation_url_dict['time'] \
+                = get_time(time_and_reservation_url)
+            time_and_reservation_url_dict['reservation_url'] \
+                = get_reservation_url(time_and_reservation_url)
 
             time_and_reservation_url_list.append(time_and_reservation_url_dict)
 
