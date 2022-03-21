@@ -190,6 +190,7 @@ def create_slack_text_movie_info(all_movies, slack_text_list):
 def create_slack_text_movie_schedule(schedule_list, slack_text_list, tomorrow):
     month = tomorrow.month
     day = tomorrow.day
+    sinjuku_toho_theater = get_url_from_json('target_scraped_url')
     for schedule_index, schedule in enumerate(schedule_list):
         if schedule_list[schedule_index]['time_and_reservation'][0]['time'] == '':
             slack_text_list.append(
@@ -210,64 +211,52 @@ def create_slack_text_movie_schedule(schedule_list, slack_text_list, tomorrow):
                     }
                 }
             )
+        else:
+            slack_text_list.append(
+                {
+                    'type': 'section',
+                    'text': {
+                        'type': 'plain_text',
+                        'text': f'- - - - - {schedule["type"]} - - - - -'
+                    }
+                }
+            )
+            slack_text_list.append(
+                {
+                    'type': 'actions',
+                    'elements': []
+                }
+            )
+
+            slack_text_list[2+(schedule_index*2+1)]['elements'].append(
+                create_slack_text_reserve_button(
+                    schedule['time_and_reservation'], [])
+            )
+
+
+def create_slack_text_reserve_button(time_and_reservation, slack_text_list):
+    for t_r in time_and_reservation:
+        slack_text_list.append(
+            {
+                'type': 'button',
+                'text': {
+                    'type': 'plain_text',
+                    'text': t_r['time']
+                },
+                'url': t_r['reservation']
+            }
+        )
 
 
 def slack_notify(tomorrow, slack_notify_text):
     month = tomorrow.month
     day = tomorrow.day
     day_of_week = tomorrow.strftime('%a')
-    slack_url = get_url_from_json('incomming_webhook_url')
+    slack_url = slackweb.Slack(get_url_from_json('incomming_webhook_url'))
     slack_url.notify(
         text=f'明日 ( {str(month)}/{str(day)} {str(day_of_week)} ) の映画情報',
         attachments=slack_notify_text
     )
-#     for time_schedule_index, time_schedule in enumerate(movie['time_schedules']):
-#         if movie['time_schedules'][time_schedule_index]['time_and_reservation'][0]['time'] == '':
-#             slack_notify_info[movie_index]['blocks'].append(
-#                 {
-#                     'type': "section",
-#                     'text': {
-#                         'type': 'plain_text',
-#                         'text': f'- - - - - {time_schedule["type"]} - - - - -'
-#                     },
-#                 }
-#             )
-#             slack_notify_info[movie_index]['blocks'].append(
-#                 {
-#                     'type': 'section',
-#                     'text': {
-#                         'type': 'mrkdwn',
-#                         'text': f'{str(month)}/{str(day)}の上映情報なし\n 別日のスケジュールは<{sinjuku_toho_theater}|こちら>から'
-#                     }
-#                 }
-#             )
-#         else:
-#             slack_notify_info[movie_index]['blocks'].append(
-#                 {
-#                     "type": "section",
-#                     "text": {
-#                         "type": "plain_text",
-#                         "text": f'- - - - - {time_schedule["type"]} - - - - -'
-#                     }
-#                 }
-#             )
-#             slack_notify_info[movie_index]['blocks'].append(
-#                 {
-#                     "type": "actions",
-#                     "elements": []
-#                 }
-#             )
-#             for time_and_reservation_index, time_and_reservation in enumerate(time_schedule['time_and_reservation']):
-#                 slack_notify_info[movie_index]['blocks'][2+(time_schedule_index*2+1)]['elements'].append(
-#                     {
-#                         'type': 'button',
-#                         'text': {
-#                             'type': 'plain_text',
-#                             'text': time_and_reservation['time']
-#                         },
-#                         'url': time_and_reservation['reservation']
-#                     }
-#                 )
 
 
 if __name__ == '__main__':
