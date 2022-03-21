@@ -13,23 +13,23 @@ def main():
     all_movies = []
 
     html = get_movies_from_html(target_url)
-    movies_list_form_html = html.find_all(
+    movie_list = html.find_all(
         'div', class_='content-container')[1].find_all('section')
 
-    for movie in movies_list_form_html:
+    for movie in movie_list:
         movie_info = {
             'code': '',
             'title': '',
             'details': [],
             'image_url': '',
-            'time_schedules': [],
+            'schedules': [],
         }
 
         movie_info['code'] = get_code(movie)
         movie_info['title'] = get_title(movie)
-        movie_info['details'] = get_details_list(movie)
+        movie_info['details'] = get_details(movie)
         movie_info['image_url'] = get_image_url(movie)
-        movie_info['time_schedules'] = get_time_schedules_list(movie)
+        movie_info['schedules'] = get_schedules(movie)
 
         all_movies.append(movie_info)
 
@@ -60,7 +60,7 @@ def get_title(movie):
     return title.get_text()
 
 
-def get_details_list(movie):
+def get_details(movie):
     details = movie.find('div', class_='movie-image').find('p', class_='data')
     details_list = []
     for elem in details:
@@ -78,22 +78,22 @@ def get_image_url(movie):
     return image_url
 
 
-def get_time_schedules_list(movie, tomorrow):
-    movie_schedules = movie.find_all('div', class_='movie-schedule')
-    time_schedules_list = []
-    for movie_schedule in movie_schedules:
-        time_schedules_dict = {
+def get_schedules(movie):
+    schedule = movie.find_all('div', class_='movie-schedule')
+    schedule_list = []
+    for schedule_info in schedule:
+        schedule_info_dict = {
             'type': '',
-            'time_and_reservation': []
+            'time_and_reservation_url': []
         }
 
-        time_schedules_dict['type'] = get_type(movie_schedule)
-        time_schedules_dict['time_and_reservation'] = get_time_and_reservation_list(
-            movie_schedule, tomorrow)
+        schedule_info_dict['type'] = get_type(schedule_info)
+        schedule_info_dict['time_and_reservarion_url'] = get_time_and_reservation_url(
+            schedule_info)
 
-        time_schedules_list.append(time_schedules_dict)
+        schedule_list.append(schedule_info_dict)
 
-    return time_schedules_list
+    return schedule_list
 
 
 def get_type(movie_schedule):
@@ -104,44 +104,46 @@ def get_type(movie_schedule):
         return '通常'
 
 
-def get_time_and_reservation_list(movie_schedule, tomorrow):
-    time_and_reservation = []
-    tomorrow_movie_schedules = movie_schedule.find(
+def get_time_and_reservation_url(schedule_info):
+    tomorrow = get_tomorrow_date()
+    time_and_reservation_url_list = []
+    schedule = schedule_info.find(
         'td', attrs={'data-date': str(tomorrow).replace('-', '')})
     try:
-        tomorrow_time_and_reservation = tomorrow_movie_schedules.find_all('a')
+        all_time_and_reservation_url = schedule.find_all('a')
     except:
-        tomorrow_time_and_reservation = None
-    if tomorrow_time_and_reservation:
-        for time_schedule in tomorrow_time_and_reservation:
-            time_and_reservation_dict = {
+        all_time_and_reservation_url = None
+    if time_and_reservation_url:
+        for time_and_reservation_url in all_time_and_reservation_url:
+            time_and_reservation_url_dict = {
                 'time': '',
-                'reservation': ''
+                'reservation_url': ''
             }
 
-            time_and_reservation['time'] = get_time(time_schedule)
-            time_and_reservation['reservation'] = get_reservation(
-                time_schedule)
+            time_and_reservation_url_dict['time'] = get_time(
+                time_and_reservation_url)
+            time_and_reservation_url_dict['reservation_url'] = get_reservation_url(
+                time_and_reservation_url)
 
-            time_and_reservation.append(time_and_reservation_dict)
+            time_and_reservation_url_list.append(time_and_reservation_url_dict)
 
     else:
         time_and_reservation_dict = {
             'time': '',
-            'reservation': ''
+            'reservation_url': ''
         }
-        time_and_reservation.append(time_and_reservation_dict)
+        time_and_reservation_url_list.append(time_and_reservation_dict)
 
-    return time_and_reservation
-
-
-def get_time(time_schedule):
-    return time_schedule.get_text()
+    return time_and_reservation_url_list
 
 
-def get_reservation(time_schedule):
-    if 'href' in str(time_schedule):
-        return time_schedule['href']
+def get_time(time):
+    return time.get_text()
+
+
+def get_reservation_url(reservation_url):
+    if 'href' in str(reservation_url):
+        return reservation_url['href']
     return ''
 
 
@@ -158,7 +160,7 @@ def get_code(movie):
 def create_slack_text_list(all_movies, slack_text_list):
     toho_reservation_url = get_url_from_json(
         'toho_reservation_url_without_sakuhin_cd')
-    sinjuku_toho_theater = get_url_from_json('target_scraped_url')
+    sinjuku_toho_theater_url = get_url_from_json('target_scraped_url')
     tomorrow = get_tomorrow_date()
     month = tomorrow.month
     day = tomorrow.day
@@ -186,14 +188,14 @@ def create_slack_text_list(all_movies, slack_text_list):
             }
         )
 
-        for time_schedule_index, time_schedule in enumerate(movie['time_schedules']):
-            if movie['time_schedules'][time_schedule_index]['time_and_reservation'][0]['time'] == '':
+        for schedule_index, schedule in enumerate(movie['schedules']):
+            if movie['schedules'][schedule_index]['time_and_reservation_url'][0]['time'] == '':
                 slack_text_list[movie_index]['blocks'].append(
                     {
                         'type': "section",
                         'text': {
                             'type': 'plain_text',
-                            'text': f'- - - - - {time_schedule["type"]} - - - - -'
+                            'text': f'- - - - - {schedule["type"]} - - - - -'
                         },
                     }
                 )
@@ -202,7 +204,7 @@ def create_slack_text_list(all_movies, slack_text_list):
                         'type': 'section',
                         'text': {
                             'type': 'mrkdwn',
-                            'text': f'{str(month)}/{str(day)}の上映情報なし\n 別日のスケジュールは<{sinjuku_toho_theater}|こちら>から'
+                            'text': f'{str(month)}/{str(day)}の上映情報なし\n 別日のスケジュールは<{sinjuku_toho_theater_url}|こちら>から'
                         }
                     }
                 )
@@ -212,7 +214,7 @@ def create_slack_text_list(all_movies, slack_text_list):
                         "type": "section",
                         "text": {
                             "type": "plain_text",
-                            "text": f'- - - - - {time_schedule["type"]} - - - - -'
+                            "text": f'- - - - - {schedule["type"]} - - - - -'
                         }
                     }
                 )
@@ -222,15 +224,15 @@ def create_slack_text_list(all_movies, slack_text_list):
                         "elements": []
                     }
                 )
-                for time_and_reservation in time_schedule['time_and_reservation']:
-                    slack_text_list[movie_index]['blocks'][2+(time_schedule_index*2+1)]['elements'].append(
+                for time_and_reservation_url in schedule['time_and_reservation_url']:
+                    slack_text_list[movie_index]['blocks'][2+(schedule_index*2+1)]['elements'].append(
                         {
                             'type': 'button',
                             'text': {
                                 'type': 'plain_text',
-                                'text': time_and_reservation['time']
+                                'text': time_and_reservation_url['time']
                             },
-                            'url': time_and_reservation['reservation']
+                            'url': time_and_reservation_url['reservation_url']
                         }
                     )
 
