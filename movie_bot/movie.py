@@ -247,8 +247,6 @@ def slack_notify(slack_text):
     day_of_week = tomorrow.strftime('%a')
 
     slack_url = slackweb.Slack(get_url_from_json('incoming_webhook_url'))
-    with open('error_data_slack_text.py', 'w') as f:
-        print(slack_text, file=f)
     slack_url.notify(
         text=f'明日 ( {str(month)}/{str(day)} {str(day_of_week)} ) の映画情報',
         attachments=slack_text
