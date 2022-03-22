@@ -178,7 +178,7 @@ def create_slack_text(all_movies):
                     },
                     {
                         'type': 'section',
-                        'type': {
+                        'text': {
                             'type': 'mrkdwn',
                             'text': f'<{toho_reservation_url}{movie["code"]}|{movie["title"]}> \n \n {" ".join(movie["details"])}'
                         },
@@ -191,7 +191,6 @@ def create_slack_text(all_movies):
                 ]
             }
         )
-
         for schedule_index, schedule in enumerate(movie['schedules']):
             if movie['schedules'][schedule_index]['time_and_reservation_url'][0]['time'] == '':
                 slack_text_list[movie_index]['blocks'].append(
@@ -250,6 +249,8 @@ def slack_notify(slack_text):
     day_of_week = tomorrow.strftime('%a')
 
     slack_url = slackweb.Slack(get_url_from_json('incoming_webhook_url'))
+    with open('error_data_slack_text.py', 'w') as f:
+        print(slack_text, file=f)
     slack_url.notify(
         text=f'明日 ( {str(month)}/{str(day)} {str(day_of_week)} ) の映画情報',
         attachments=slack_text
