@@ -6,8 +6,6 @@ import json
 
 
 def main():
-    tomorrow = get_tomorrow_date()
-
     target_url = get_url_from_json('target_scraped_url')
 
     movies = []
