@@ -1,5 +1,8 @@
 # slackの通知テスト
-slackTest*
+/slack_test
+
+# エラーデータ格納フォルダ
+/error_data
 
 # 共通
 url_info.json
