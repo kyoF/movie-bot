@@ -33,9 +33,9 @@ def main():
 
         movies.append(movie_info)
 
-    slack_notify_text = create_slack_text_list(movies)
+    slack_text = create_slack_text(movies)
 
-    slack_notify(tomorrow, slack_notify_text)
+    slack_notify(slack_text)
 
 
 def get_tomorrow_date():
@@ -89,7 +89,7 @@ def get_schedules(movie):
 
         schedule_info_dict['type'] \
             = get_type(schedule_info)
-        schedule_info_dict['time_and_reservarion_url'] \
+        schedule_info_dict['time_and_reservation_url'] \
             = get_time_and_reservation_url(schedule_info)
 
         schedule_list.append(schedule_info_dict)
@@ -116,7 +116,7 @@ def get_time_and_reservation_url(schedule_info):
     except:
         all_time_and_reservation_url = None
 
-    if time_and_reservation_url:
+    if all_time_and_reservation_url:
         for time_and_reservation_url in all_time_and_reservation_url:
             time_and_reservation_url_dict = {
                 'time': '',
@@ -131,11 +131,11 @@ def get_time_and_reservation_url(schedule_info):
             time_and_reservation_url_list.append(time_and_reservation_url_dict)
 
     else:
-        time_and_reservation_dict = {
+        time_and_reservation_url_dict = {
             'time': '',
             'reservation_url': ''
         }
-        time_and_reservation_url_list.append(time_and_reservation_dict)
+        time_and_reservation_url_list.append(time_and_reservation_url_dict)
 
     return time_and_reservation_url_list
 
@@ -160,7 +160,8 @@ def get_code(movie):
     return code
 
 
-def create_slack_text_list(all_movies, slack_text_list):
+def create_slack_text(all_movies):
+    slack_text_list = []
     toho_reservation_url = get_url_from_json(
         'toho_reservation_url_without_sakuhin_cd')
     sinjuku_toho_theater_url = get_url_from_json('target_scraped_url')
@@ -171,7 +172,7 @@ def create_slack_text_list(all_movies, slack_text_list):
     for movie_index, movie in enumerate(all_movies):
         slack_text_list.append(
             {
-                "blicks": [
+                "blocks": [
                     {
                         'type': 'divider'
                     },
@@ -183,7 +184,7 @@ def create_slack_text_list(all_movies, slack_text_list):
                         },
                         "accessory": {
                             "type": "image",
-                            "image_url": movie["image"],
+                            "image_url": movie["image_url"],
                             "alt_text": movie["title"]
                         }
                     }
@@ -242,15 +243,16 @@ def create_slack_text_list(all_movies, slack_text_list):
     return slack_text_list
 
 
-def slack_notify(slack_notify_text):
+def slack_notify(slack_text):
     tomorrow = get_tomorrow_date()
     month = tomorrow.month
     day = tomorrow.day
     day_of_week = tomorrow.strftime('%a')
-    slack_url = slackweb.Slack(get_url_from_json('incomming_webhook_url'))
+
+    slack_url = slackweb.Slack(get_url_from_json('incoming_webhook_url'))
     slack_url.notify(
         text=f'明日 ( {str(month)}/{str(day)} {str(day_of_week)} ) の映画情報',
-        attachments=slack_notify_text
+        attachments=slack_text
     )
 
 
