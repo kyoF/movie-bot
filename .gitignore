@@ -14,3 +14,6 @@ url_info.json
 # movie_bot
 movie_bot/
 !./movie_bot/movie.py
+
+# 外部モジュール格納
+/python
