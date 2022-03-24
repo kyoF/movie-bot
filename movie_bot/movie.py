@@ -23,6 +23,11 @@ def main():
             'schedules': [],
         }
 
+        code = get_code(movie)
+        if code:
+            movie_info['code'] = code
+        else:
+            continue
         movie_info['code'] = get_code(movie)
         movie_info['title'] = get_title(movie)
         movie_info['details'] = get_details(movie)
@@ -149,13 +154,16 @@ def get_reservation_url(reservation_url):
 
 
 def get_code(movie):
-    url = str(movie.find('a', class_='btn ticket2')['href'])
-    first_target_str = 'sakuhin_cd='
-    second_target_str = '&screen_cd='
-    first_idx = url.find(first_target_str)
-    second_idx = url.find(second_target_str)
-    code = url[first_idx + len(first_target_str):second_idx]
-    return code
+    try:
+        url = str(movie.find('a', class_='btn ticket2')['href'])
+        first_target_str = 'sakuhin_cd='
+        second_target_str = '&screen_cd='
+        first_idx = url.find(first_target_str)
+        second_idx = url.find(second_target_str)
+        code = url[first_idx + len(first_target_str):second_idx]
+        return code
+    except:
+        return False
 
 
 def create_slack_text(all_movies):
