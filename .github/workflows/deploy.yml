@@ -1,0 +1,17 @@
+name: Deploy to AWS Lambda
+on:
+  push:
+    branched:
+      - dev
+
+env:
+  AWS_ROLE_ARN: arn:aws:iam::
+
+jobs:
+  aws-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
