@@ -5,23 +5,24 @@ import datetime
 
 
 def main():
-    # 明日の日付と曜日を取得する
-    tomorrow = datetime.date.today() + datetime.timedelta(days=1)
+    tomorrow = get_tomorrow_date()
     year = tomorrow.year
     month = tomorrow.month
     day = tomorrow.day
-    day_of_week = tomorrow.strftime('%a')
 
     target_url = get_url_from_json('target_scraped_url').format(year, month)
     comics = get_comic_info_from_html(target_url)
     comics_list = comics.find_all('tr')
-    print(comics_list)
-    for index, comic in enumerate(comics_list):
-        if index+1 == day:
-            works_of_day = comic.find(
+    for day_index, comic in enumerate(comics_list):
+        if day_index+1 == day:
+            comics_of_day = comic.find(
                 'div', class_='products-td').find_all('div', class_='div-wrap')
 
             break
+
+
+def get_tomorrow_date():
+    return datetime.date.today() + datetime.timedelta(days=1)
 
 
 def get_url_from_json(key):
