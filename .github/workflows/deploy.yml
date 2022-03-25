@@ -2,7 +2,7 @@ name: AWS Deploy
 on: push
 
 env:
-  AWS_ROLE_ARN: arn:aws:iam::586596014160:role/github-actions-oidc
+  AWS_ROLE_ARN: arn:aws:iam::586596014160:role/slackNotifyFromLambda
 
 permissions:
   id-token: write
