@@ -1,19 +1,8 @@
-# slackの通知テスト
-/slack_test
-
-# エラーデータ格納フォルダ
-/error_data
-
-# 共通
+# url情報
 url_info.json
-
-# comic_bot
-/comic_bot
-!./comic_bot/comic.py
-
-# movie_bot
-movie_bot/
-!./movie_bot/movie.py
 
 # 外部モジュール格納
 /python
+
+# slackのサンプルテキストフォーマット
+slack_text_format
