@@ -6,7 +6,7 @@ import os
 from dotenv import load_dotenv
 
 
-def main():
+def main(response, context):
     load_dotenv()
 
     target_url = get_url_from_dotenv('target_scraped_url')
@@ -258,4 +258,4 @@ def slack_notify(slack_text):
 
 
 if __name__ == '__main__':
-    main()
+    main('', '')
