@@ -4,7 +4,7 @@ slackに明日の映画情報を出力
 ## 環境構築
 1. リポジトリのclone
     ```
-    $ git clone
+    $ git clone git@github.com:kyoF/movie-bot.git
     $ cd movie-bot
     ```
 
