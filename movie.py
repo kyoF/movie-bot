@@ -2,11 +2,14 @@ import requests
 from bs4 import BeautifulSoup
 import datetime
 import slackweb
-import json
+import os
+from dotenv import load_dotenv
 
 
 def main():
-    target_url = get_url_from_json('target_scraped_url')
+    load_dotenv()
+
+    target_url = get_url_from_dotenv('target_scraped_url')
 
     movies = []
 
@@ -40,10 +43,8 @@ def get_tomorrow_date():
     return datetime.date.today() + datetime.timedelta(days=1)
 
 
-def get_url_from_json(key):
-    with open('url_info.json') as f:
-        json_data = json.load(f)
-        return json_data[key]
+def get_url_from_dotenv(value):
+    return os.getenv(value)
 
 
 def get_movies_from_html(url):
@@ -163,9 +164,9 @@ def get_code(movie):
 
 def create_slack_text(all_movies):
     slack_text_list = []
-    toho_reservation_url = get_url_from_json(
+    toho_reservation_url = get_url_from_dotenv(
         'toho_reservation_url_without_sakuhin_cd')
-    sinjuku_toho_theater_url = get_url_from_json('target_scraped_url')
+    sinjuku_toho_theater_url = get_url_from_dotenv('target_scraped_url')
     tomorrow = get_tomorrow_date()
     month = tomorrow.month
     day = tomorrow.day
@@ -249,7 +250,7 @@ def slack_notify(slack_text):
     day = tomorrow.day
     day_of_week = tomorrow.strftime('%a')
 
-    slack_url = slackweb.Slack(get_url_from_json('incoming_webhook_url'))
+    slack_url = slackweb.Slack(get_url_from_dotenv('incoming_webhook_url'))
     slack_url.notify(
         text=f'明日 ( {str(month)}/{str(day)} {str(day_of_week)} ) の映画情報',
         attachments=slack_text
