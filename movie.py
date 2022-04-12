@@ -182,12 +182,12 @@ def create_slack_text(all_movies):
                         'type': 'section',
                         'text': {
                             'type': 'mrkdwn',
-                            'text': f'<{toho_reservation_url}{movie["code"]}|{movie["title"]}> \n \n {" ".join(movie["details"])}'
+                            'text': f'<{toho_reservation_url}{movie.get("code")}|{movie.get("title")}> \n \n {" ".join(movie.get("details"))}'
                         },
                         "accessory": {
                             "type": "image",
-                            "image_url": movie["image_url"],
-                            "alt_text": movie["title"]
+                            "image_url": movie.get("image_url"),
+                            "alt_text": movie.get("title")
                         }
                     }
                 ]
@@ -200,7 +200,7 @@ def create_slack_text(all_movies):
                         'type': "section",
                         'text': {
                             'type': 'plain_text',
-                            'text': f'- - - - - {schedule["type"]} - - - - -'
+                            'text': f'- - - - - {schedule.get("type")} - - - - -'
                         },
                     }
                 )
@@ -219,7 +219,7 @@ def create_slack_text(all_movies):
                         "type": "section",
                         "text": {
                             "type": "plain_text",
-                            "text": f'- - - - - {schedule["type"]} - - - - -'
+                            "text": f'- - - - - {schedule.get("type")} - - - - -'
                         }
                     }
                 )
@@ -235,9 +235,9 @@ def create_slack_text(all_movies):
                             'type': 'button',
                             'text': {
                                 'type': 'plain_text',
-                                'text': time_and_reservation_url['time']
+                                'text': time_and_reservation_url.get('time')
                             },
-                            'url': time_and_reservation_url['reservation_url']
+                            'url': time_and_reservation_url.get('reservation_url')
                         }
                     )
 
