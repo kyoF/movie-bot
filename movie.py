@@ -39,8 +39,8 @@ def main(response, context):
     slack_notify(slack_text)
 
 
-def get_tomorrow_date():
-    return datetime.date.today() + datetime.timedelta(days=1)
+def get_today():
+    return datetime.date.today()
 
 
 def get_url_from_dotenv(value):
@@ -105,10 +105,10 @@ def get_type(movie_schedule):
 
 
 def get_time_and_reservation_url(schedule_info):
-    tomorrow = get_tomorrow_date()
+    today = get_today()
     time_and_reservation_url_list = []
     schedule = schedule_info.find(
-        'td', attrs={'data-date': str(tomorrow).replace('-', '')})
+        'td', attrs={'data-date': str(today).replace('-', '')})
 
     try:
         all_time_and_reservation_url = schedule.find_all('a')
@@ -167,9 +167,9 @@ def create_slack_text(all_movies):
     toho_reservation_url = get_url_from_dotenv(
         'toho_reservation_url_without_sakuhin_cd')
     sinjuku_toho_theater_url = get_url_from_dotenv('target_scraped_url')
-    tomorrow = get_tomorrow_date()
-    month = tomorrow.month
-    day = tomorrow.day
+    today = get_today()
+    month = today.month
+    day = today.day
 
     for movie_index, movie in enumerate(all_movies):
         slack_text_list.append(
@@ -245,10 +245,10 @@ def create_slack_text(all_movies):
 
 
 def slack_notify(slack_text):
-    tomorrow = get_tomorrow_date()
-    month = tomorrow.month
-    day = tomorrow.day
-    day_of_week = tomorrow.strftime('%a')
+    today = get_today()
+    month = today.month
+    day = today.day
+    day_of_week = today.strftime('%a')
 
     slack_url = slackweb.Slack(get_url_from_dotenv('incoming_webhook_url'))
     slack_url.notify(
