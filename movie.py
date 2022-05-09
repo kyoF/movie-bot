@@ -39,8 +39,9 @@ def main(response, context):
     slack_notify(slack_text)
 
 
+# グリニッジ標準時でAWS Lambdaが実行されるため、明日の日付を取得して日本時間の今日の日付とする
 def get_today():
-    return datetime.date.today()
+    return datetime.date.today() + datetime.timedelta(days=1)
 
 
 def get_url_from_dotenv(value):
@@ -252,7 +253,7 @@ def slack_notify(slack_text):
 
     slack_url = slackweb.Slack(get_url_from_dotenv('incoming_webhook_url'))
     slack_url.notify(
-        text=f'明日 ( {str(month)}/{str(day)} {str(day_of_week)} ) の映画情報',
+        text=f'今日 ( {str(month)}/{str(day)} {str(day_of_week)} ) の映画情報',
         attachments=slack_text
     )
 
