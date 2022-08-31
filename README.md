@@ -15,21 +15,15 @@ slackに明日の映画情報を出力
     .envファイルに下記を追記
     ```
     incoming_webhook_url={incoming webhookのURL}
-    target_scraped_url=https://eiga.com/theater/13/130201/3263/ # 好きな映画館の場所のリンク
+    target_scraped_url=https://eiga.com/theater/13/130201/3263/ # TOHOシネマズ 新宿
     toho_reservation_url_without_sakuhin_cd=https://hlo.tohotheater.jp/net/movie/TNPI3060J01.do?sakuhin_cd=
     ```
 
-3. モジュールの追加
-    ```
-    $ pip install requests
-    $ pip install beautifulsoup4
-    $ pip install slackweb
-    $ pip install python-dotenv
-    ```
-
-4. 実行
+3. 実行
+   [poetry](https://cocoatomo.github.io/poetry-ja/)をインストール
    ```
-   $ python3 movie.py
+   $ poetry shell
+   $ python movie.py
    ```
 
 ## 実行結果
