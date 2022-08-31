@@ -69,13 +69,14 @@ def get_details(movie):
 
 
 def get_image_url(movie):
-    image = str(movie.find('div', class_='movie-image').find('noscript'))
-    first_target_str = 'src="'
-    second_target_str = '" width='
-    first_idx = image.find(first_target_str)
-    second_idx = image.find(second_target_str)
-    image_url = image[first_idx+len(first_target_str):second_idx]
-    return image_url
+    # image = str(movie.find('div', class_='movie-image').find('noscript'))
+    image = movie.find('div', class_='movie-image').find('img')
+    # first_target_str = 'src="'
+    # second_target_str = '" width='
+    # first_idx = image.find(first_target_str)
+    # second_idx = image.find(second_target_str)
+    # image_url = image[first_idx+len(first_target_str):second_idx]
+    return image.get('src')
 
 
 def get_schedules(movie):
