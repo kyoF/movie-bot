@@ -20,6 +20,7 @@ slackに明日の映画情報を出力
     ```
 
 3. 実行
+    
    [poetry](https://cocoatomo.github.io/poetry-ja/)をインストール
    ```
    $ poetry shell
